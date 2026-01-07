@@ -1,0 +1,13 @@
+services:
+  integrityhvac:
+    build: .
+    container_name: integrityhvac-crm
+    ports:
+      - "8677:8677"
+    environment:
+      - PORT=8677
+      - NODE_ENV=production
+    volumes:
+      # Persist the leads data
+      - ./data:/app/data
+    restart: unless-stopped

@@ -11,11 +11,17 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 8677;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from React build (for production)
+const publicPath = path.join(__dirname, 'public');
+if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+}
 
 // Data storage (using JSON file for simplicity - can be replaced with a database)
 const DATA_DIR = path.join(__dirname, 'data');
@@ -192,6 +198,17 @@ app.get('/api/stats', (req, res) => {
         res.json({ success: true, stats });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Catch-all handler: serve index.html for any route not matched above
+// This enables client-side routing in React
+app.get('*', (req, res) => {
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).json({ error: 'Application not built. Run npm run build in client folder.' });
     }
 });
 
