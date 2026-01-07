@@ -1,5 +1,9 @@
-// In production, use relative URLs. In development, use the dev server.
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8677/api');
+// Use relative URLs in production, or VITE_API_URL if set
+// In dev mode, Vite dev server proxies won't work, so we need the full URL
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.protocol !== 'file:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? '/api'
+    : 'http://localhost:8677/api');
 
 class ApiService {
     async request(endpoint, options = {}) {

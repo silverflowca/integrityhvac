@@ -22,6 +22,14 @@ COPY server/ ./
 # Copy built client from previous stage
 COPY --from=client-build /app/client/dist ./public
 
+# Create data directory and set ownership to node user
+RUN mkdir -p /app/data && \
+    chown -R node:node /app && \
+    chmod -R 755 /app/data
+
+# Switch to node user for security
+USER node
+
 # Expose port 8677
 EXPOSE 8677
 
