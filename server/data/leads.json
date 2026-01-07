@@ -1,0 +1,28 @@
+[
+  {
+    "id": "1767809889984",
+    "company": "Encourage Family Health Communications Inc.",
+    "name": "Damion Steen",
+    "phone": "7823772906",
+    "email": "damion.steen@protonmail.com",
+    "location": "home",
+    "status": "new",
+    "priority": "hot",
+    "notes": "",
+    "createdAt": "2026-01-07T18:18:09.984Z",
+    "updatedAt": "2026-01-07T22:26:57.727Z"
+  },
+  {
+    "id": "1767825279608",
+    "company": "Stephen MacDonald",
+    "name": "Stephen",
+    "phone": "9024028391",
+    "email": "damion.steen@protonmail.com",
+    "location": "",
+    "status": "lost",
+    "priority": "warm",
+    "notes": "",
+    "createdAt": "2026-01-07T22:34:39.608Z",
+    "updatedAt": "2026-01-07T22:44:17.594Z"
+  }
+]

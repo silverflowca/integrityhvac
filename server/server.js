@@ -1,0 +1,203 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 3003;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Data storage (using JSON file for simplicity - can be replaced with a database)
+const DATA_DIR = path.join(__dirname, 'data');
+const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
+
+// Ensure data directory exists
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Initialize leads file if it doesn't exist
+if (!fs.existsSync(LEADS_FILE)) {
+    fs.writeFileSync(LEADS_FILE, JSON.stringify([]));
+}
+
+// Helper functions for data management
+const readLeads = () => {
+    try {
+        const data = fs.readFileSync(LEADS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error reading leads:', error);
+        return [];
+    }
+};
+
+const writeLeads = (leads) => {
+    try {
+        fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Error writing leads:', error);
+        return false;
+    }
+};
+
+// ============================================================================
+// API ENDPOINTS
+// ============================================================================
+
+// Health check
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Integrity HVAC CRM API is running' });
+});
+
+// Get all leads
+app.get('/api/leads', (req, res) => {
+    try {
+        const leads = readLeads();
+        res.json({ success: true, leads });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get lead by ID
+app.get('/api/leads/:id', (req, res) => {
+    try {
+        const leads = readLeads();
+        const lead = leads.find(l => l.id === req.params.id);
+
+        if (lead) {
+            res.json({ success: true, lead });
+        } else {
+            res.status(404).json({ success: false, error: 'Lead not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Create new lead
+app.post('/api/leads', (req, res) => {
+    try {
+        const leads = readLeads();
+        const newLead = {
+            id: Date.now().toString(),
+            ...req.body,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        leads.push(newLead);
+
+        if (writeLeads(leads)) {
+            res.status(201).json({ success: true, lead: newLead });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to save lead' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Update lead
+app.put('/api/leads/:id', (req, res) => {
+    try {
+        const leads = readLeads();
+        const index = leads.findIndex(l => l.id === req.params.id);
+
+        if (index !== -1) {
+            leads[index] = {
+                ...leads[index],
+                ...req.body,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (writeLeads(leads)) {
+                res.json({ success: true, lead: leads[index] });
+            } else {
+                res.status(500).json({ success: false, error: 'Failed to update lead' });
+            }
+        } else {
+            res.status(404).json({ success: false, error: 'Lead not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Delete lead
+app.delete('/api/leads/:id', (req, res) => {
+    try {
+        const leads = readLeads();
+        const filteredLeads = leads.filter(l => l.id !== req.params.id);
+
+        if (filteredLeads.length < leads.length) {
+            if (writeLeads(filteredLeads)) {
+                res.json({ success: true, message: 'Lead deleted successfully' });
+            } else {
+                res.status(500).json({ success: false, error: 'Failed to delete lead' });
+            }
+        } else {
+            res.status(404).json({ success: false, error: 'Lead not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get leads by status
+app.get('/api/leads/status/:status', (req, res) => {
+    try {
+        const leads = readLeads();
+        const filteredLeads = leads.filter(l => l.status === req.params.status);
+        res.json({ success: true, leads: filteredLeads });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Get statistics
+app.get('/api/stats', (req, res) => {
+    try {
+        const leads = readLeads();
+
+        const stats = {
+            total: leads.length,
+            byStatus: {
+                new: leads.filter(l => l.status === 'new').length,
+                contacted: leads.filter(l => l.status === 'contacted').length,
+                qualified: leads.filter(l => l.status === 'qualified').length,
+                quoted: leads.filter(l => l.status === 'quoted').length,
+                won: leads.filter(l => l.status === 'won').length,
+                lost: leads.filter(l => l.status === 'lost').length
+            },
+            byPriority: {
+                hot: leads.filter(l => l.priority === 'hot').length,
+                warm: leads.filter(l => l.priority === 'warm').length,
+                cold: leads.filter(l => l.priority === 'cold').length
+            }
+        };
+
+        res.json({ success: true, stats });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`\n✓ Integrity HVAC CRM API Server running on http://localhost:${PORT}`);
+    console.log(`✓ Health check: http://localhost:${PORT}/api/health`);
+    console.log(`✓ Leads API: http://localhost:${PORT}/api/leads\n`);
+});
