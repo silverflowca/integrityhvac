@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './LeadFilters.css';
 
 const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, leadCount }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const hasActiveFilters = filters.status !== 'all' || filters.priority !== 'all';
+
     return (
         <div className="lead-filters">
-            <div className="filter-section">
+            <div className="filter-header" onClick={() => setIsExpanded(!isExpanded)}>
+                <div className="filter-header-left">
+                    <span className="filter-icon">🔍</span>
+                    <span className="filter-title">Filters & Sort</span>
+                    {hasActiveFilters && <span className="filter-badge">{(filters.status !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0)}</span>}
+                </div>
+                <div className="filter-header-right">
+                    <span className="lead-count-mobile">{leadCount}</span>
+                    <span className={'filter-chevron ' + (isExpanded ? 'expanded' : '')}>▼</span>
+                </div>
+            </div>
+
+            <div className={'filter-section ' + (isExpanded ? 'expanded' : '')}>
                 <div className="filter-group">
                     <label className="filter-label">Status</label>
                     <select
