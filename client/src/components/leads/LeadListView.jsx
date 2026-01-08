@@ -48,6 +48,7 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
             <table className="leads-table">
                 <thead>
                     <tr>
+                        <th>Status</th>
                         <th>Company</th>
                         <th>Contact</th>
                         <th>Phone</th>
@@ -62,6 +63,13 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                 <tbody>
                     {leads.map((lead) => (
                         <tr key={lead.id} className="lead-row">
+                            <td className="status-dot-cell">
+                                <span
+                                    className="status-dot"
+                                    style={{ backgroundColor: STATUS_COLORS[lead.status] || '#94a3b8' }}
+                                    title={lead.status || 'new'}
+                                ></span>
+                            </td>
                             <td className="lead-company-cell">
                                 <strong>{lead.company || 'No Company'}</strong>
                             </td>

@@ -37,7 +37,14 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
         <div className="lead-card">
             <div className="lead-header">
                 <div className="lead-title-section">
-                    <h3 className="lead-company">{lead.company || 'No Company'}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span
+                            className="status-dot"
+                            style={{ backgroundColor: STATUS_COLORS[lead.status] || '#94a3b8' }}
+                            title={lead.status || 'new'}
+                        ></span>
+                        <h3 className="lead-company">{lead.company || 'No Company'}</h3>
+                    </div>
                     <div className="lead-contact-name">{lead.name || 'No Name'}</div>
                 </div>
                 <div className="lead-actions">

@@ -4,6 +4,7 @@ import Topbar from './layout/Topbar';
 import LeadList from './leads/LeadList';
 import LeadListView from './leads/LeadListView';
 import LeadMapView from './leads/LeadMapView';
+import LeadFilters from './leads/LeadFilters';
 import LeadForm from './leads/LeadForm';
 import PhoneCall from './common/PhoneCall';
 import Settings from './common/Settings';
@@ -23,28 +24,90 @@ function CRM() {
     const [activeCall, setActiveCall] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [filters, setFilters] = useState({
+        status: 'all',
+        priority: 'all',
+        sortBy: 'newest',
+        groupBy: 'none'
+    });
 
     // Fetch leads on mount
     useEffect(() => {
         fetchLeads();
     }, []);
 
-    // Filter leads when search term changes
+    // Filter, sort, and group leads when filters or search term changes
     useEffect(() => {
-        if (searchTerm.trim() === '') {
-            setFilteredLeads(leads);
-        } else {
+        let result = [...leads];
+
+        // Apply search filter
+        if (searchTerm.trim() !== '') {
             const term = searchTerm.toLowerCase();
-            const filtered = leads.filter(lead =>
+            result = result.filter(lead =>
                 (lead.company?.toLowerCase().includes(term)) ||
                 (lead.name?.toLowerCase().includes(term)) ||
                 (lead.phone?.includes(term)) ||
                 (lead.email?.toLowerCase().includes(term)) ||
                 (lead.location?.toLowerCase().includes(term))
             );
-            setFilteredLeads(filtered);
         }
-    }, [searchTerm, leads]);
+
+        // Apply status filter
+        if (filters.status !== 'all') {
+            result = result.filter(lead => lead.status === filters.status);
+        }
+
+        // Apply priority filter
+        if (filters.priority !== 'all') {
+            result = result.filter(lead => lead.priority === filters.priority);
+        }
+
+        // Apply sorting
+        result = sortLeads(result, filters.sortBy);
+
+        setFilteredLeads(result);
+    }, [searchTerm, leads, filters]);
+
+    const sortLeads = (leadsToSort, sortBy) => {
+        const sorted = [...leadsToSort];
+
+        switch (sortBy) {
+            case 'newest':
+                return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            case 'oldest':
+                return sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            case 'company':
+                return sorted.sort((a, b) => (a.company || '').localeCompare(b.company || ''));
+            case 'companyDesc':
+                return sorted.sort((a, b) => (b.company || '').localeCompare(a.company || ''));
+            case 'status':
+                const statusOrder = { new: 1, contacted: 2, qualified: 3, quoted: 4, won: 5, lost: 6 };
+                return sorted.sort((a, b) => (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0));
+            case 'priority':
+                const priorityOrder = { hot: 1, warm: 2, cold: 3 };
+                return sorted.sort((a, b) => (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0));
+            default:
+                return sorted;
+        }
+    };
+
+    const groupLeads = (leadsToGroup, groupBy) => {
+        if (groupBy === 'none') {
+            return { 'All Leads': leadsToGroup };
+        }
+
+        const grouped = {};
+
+        leadsToGroup.forEach(lead => {
+            const key = groupBy === 'status' ? (lead.status || 'new') : (lead.priority || 'cold');
+            if (!grouped[key]) {
+                grouped[key] = [];
+            }
+            grouped[key].push(lead);
+        });
+
+        return grouped;
+    };
 
     const fetchLeads = async () => {
         try {
@@ -133,17 +196,69 @@ function CRM() {
         setMobileMenuOpen(false);
     };
 
+    const handleFilterChange = (filterType, value) => {
+        setFilters(prev => ({
+            ...prev,
+            [filterType]: value
+        }));
+    };
+
+    const handleSortChange = (sortBy) => {
+        setFilters(prev => ({
+            ...prev,
+            sortBy
+        }));
+    };
+
+    const handleGroupChange = (groupBy) => {
+        setFilters(prev => ({
+            ...prev,
+            groupBy
+        }));
+    };
+
     const renderLeadsView = () => {
+        const groupedLeads = groupLeads(filteredLeads, filters.groupBy);
+
         if (viewMode === 'list') {
-            return (
-                <LeadListView
-                    leads={filteredLeads}
-                    onEditLead={handleEditLead}
-                    onDeleteLead={handleDeleteLead}
-                    onUpdateStatus={handleUpdateStatus}
-                    onCall={handleCall}
-                />
-            );
+            if (filters.groupBy === 'none') {
+                return (
+                    <LeadListView
+                        leads={filteredLeads}
+                        onEditLead={handleEditLead}
+                        onDeleteLead={handleDeleteLead}
+                        onUpdateStatus={handleUpdateStatus}
+                        onCall={handleCall}
+                    />
+                );
+            } else {
+                return (
+                    <div>
+                        {Object.entries(groupedLeads).map(([groupName, groupLeads]) => (
+                            <div key={groupName} style={{ marginBottom: '24px' }}>
+                                <h3 style={{
+                                    padding: '12px 24px',
+                                    background: 'var(--bg-secondary)',
+                                    borderBottom: '2px solid var(--border-color)',
+                                    textTransform: 'capitalize',
+                                    fontSize: '16px',
+                                    fontWeight: '700',
+                                    color: 'var(--text-primary)'
+                                }}>
+                                    {groupName} ({groupLeads.length})
+                                </h3>
+                                <LeadListView
+                                    leads={groupLeads}
+                                    onEditLead={handleEditLead}
+                                    onDeleteLead={handleDeleteLead}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onCall={handleCall}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
         } else if (viewMode === 'map') {
             return (
                 <LeadMapView
@@ -155,16 +270,44 @@ function CRM() {
                 />
             );
         } else {
-            // Default to card view
-            return (
-                <LeadList
-                    leads={filteredLeads}
-                    onEditLead={handleEditLead}
-                    onDeleteLead={handleDeleteLead}
-                    onUpdateStatus={handleUpdateStatus}
-                    onCall={handleCall}
-                />
-            );
+            if (filters.groupBy === 'none') {
+                return (
+                    <LeadList
+                        leads={filteredLeads}
+                        onEditLead={handleEditLead}
+                        onDeleteLead={handleDeleteLead}
+                        onUpdateStatus={handleUpdateStatus}
+                        onCall={handleCall}
+                    />
+                );
+            } else {
+                return (
+                    <div>
+                        {Object.entries(groupedLeads).map(([groupName, groupLeads]) => (
+                            <div key={groupName} style={{ marginBottom: '24px' }}>
+                                <h3 style={{
+                                    padding: '12px 24px',
+                                    background: 'var(--bg-secondary)',
+                                    borderBottom: '2px solid var(--border-color)',
+                                    textTransform: 'capitalize',
+                                    fontSize: '16px',
+                                    fontWeight: '700',
+                                    color: 'var(--text-primary)'
+                                }}>
+                                    {groupName} ({groupLeads.length})
+                                </h3>
+                                <LeadList
+                                    leads={groupLeads}
+                                    onEditLead={handleEditLead}
+                                    onDeleteLead={handleDeleteLead}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onCall={handleCall}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
         }
     };
 
@@ -192,6 +335,16 @@ function CRM() {
                     onViewModeChange={setViewMode}
                     onToggleMobileMenu={toggleMobileMenu}
                 />
+
+                {(viewMode === 'card' || viewMode === 'list') && (
+                    <LeadFilters
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        onSortChange={handleSortChange}
+                        onGroupChange={handleGroupChange}
+                        leadCount={filteredLeads.length}
+                    />
+                )}
 
                 <div className="content-area">
                     {loading ? (
