@@ -1,18 +1,51 @@
-// Use relative URLs in production, or VITE_API_URL if set
-// In dev mode, Vite dev server proxies won't work, so we need the full URL
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined' && window.location.protocol !== 'file:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-    ? '/api'
-    : 'http://localhost:8677/api');
-
 class ApiService {
+    getBaseUrl() {
+        // If environment variable is set, use it
+        if (import.meta.env.VITE_API_URL) {
+            return import.meta.env.VITE_API_URL;
+        }
+
+        // Check at runtime if we're on localhost
+        if (typeof window !== 'undefined') {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                // If running on Vite dev server (port 5173 or 3000), use local backend
+                if (port === '5173' || port === '3000') {
+                    return 'http://localhost:3003/api';
+                }
+                // If running on Docker port (8677), use Docker backend
+                if (port === '8677') {
+                    return '/api';
+                }
+                // Default to local backend for development
+                return 'http://localhost:3003/api';
+            }
+        }
+
+        // For production (non-localhost), use relative URLs
+        return '/api';
+    }
+
+    getHeaders() {
+        const token = localStorage.getItem('token');
+        return {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        };
+    }
+
     async request(endpoint, options = {}) {
-        const url = `${API_BASE_URL}${endpoint}`;
+        const baseUrl = this.getBaseUrl();
+        const url = `${baseUrl}${endpoint}`;
+
+        console.log('[API] Request URL:', url);
+        console.log('[API] Base URL:', baseUrl);
+        console.log('[API] Window hostname:', typeof window !== 'undefined' ? window.location.hostname : 'N/A');
+
         const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
+            headers: this.getHeaders(),
             ...options,
         };
 
@@ -27,6 +60,7 @@ class ApiService {
             return data;
         } catch (error) {
             console.error('API Error:', error);
+            console.error('Failed URL:', url);
             throw error;
         }
     }
@@ -66,6 +100,29 @@ class ApiService {
 
     async getStats() {
         return this.request('/stats');
+    }
+
+    // Auth endpoints
+    async login(email, password) {
+        return this.request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        });
+    }
+
+    async logout() {
+        return this.request('/auth/logout', { method: 'POST' });
+    }
+
+    async register(userData) {
+        return this.request('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(userData)
+        });
+    }
+
+    async getCurrentUser() {
+        return this.request('/auth/me');
     }
 }
 

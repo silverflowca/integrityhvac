@@ -1,0 +1,217 @@
+.csv-import {
+    padding: 20px;
+}
+
+.csv-header h3 {
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+    font-size: 18px;
+}
+
+.csv-header p {
+    margin: 0 0 20px 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.csv-format-info {
+    background: var(--bg-secondary);
+    border-left: 4px solid var(--accent-primary);
+    padding: 16px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+}
+
+.csv-format-info strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.csv-format-info pre {
+    background: white;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin: 8px 0;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+}
+
+.csv-format-info small {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.csv-upload-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-upload {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    font-size: 14px;
+}
+
+.btn-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-reset-file {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-reset-file:hover {
+    background: white;
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.csv-preview {
+    background: white;
+    border: 2px solid var(--accent-primary);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.csv-preview h4 {
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    font-size: 15px;
+}
+
+.csv-preview table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+}
+
+.csv-preview table th {
+    background: var(--bg-secondary);
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    font-size: 13px;
+}
+
+.csv-preview table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.csv-preview table tr:last-child td {
+    border-bottom: none;
+}
+
+.preview-note {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin: 0;
+}
+
+.import-error {
+    background: #fee;
+    border-left: 4px solid #f44;
+    color: #c33;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.import-result {
+    background: #efe;
+    border-left: 4px solid #4c4;
+    padding: 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.import-result h4 {
+    margin: 0 0 12px 0;
+    color: #2a2;
+    font-size: 16px;
+}
+
+.result-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat.success .stat-value {
+    color: #2a2;
+}
+
+.stat.failed .stat-value {
+    color: #f44;
+}
+
+.csv-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-import {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-import:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(17, 153, 142, 0.4);
+}
+
+.btn-import:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

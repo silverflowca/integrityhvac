@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
+import authRoutes from './routes/auth.js';
+import { authenticateToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +19,7 @@ const PORT = process.env.PORT || 8677;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // Serve static files from React build (for production)
 const publicPath = path.join(__dirname, 'public');
@@ -62,13 +66,17 @@ const writeLeads = (leads) => {
 // API ENDPOINTS
 // ============================================================================
 
-// Health check
+// Auth routes (public)
+app.use('/api/auth', authRoutes);
+
+// Health check (public)
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Integrity HVAC CRM API is running' });
 });
 
+// Protected routes - all leads endpoints require authentication
 // Get all leads
-app.get('/api/leads', (req, res) => {
+app.get('/api/leads', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
         res.json({ success: true, leads });
@@ -78,7 +86,7 @@ app.get('/api/leads', (req, res) => {
 });
 
 // Get lead by ID
-app.get('/api/leads/:id', (req, res) => {
+app.get('/api/leads/:id', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
         const lead = leads.find(l => l.id === req.params.id);
@@ -94,7 +102,7 @@ app.get('/api/leads/:id', (req, res) => {
 });
 
 // Create new lead
-app.post('/api/leads', (req, res) => {
+app.post('/api/leads', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
         const newLead = {
@@ -117,7 +125,7 @@ app.post('/api/leads', (req, res) => {
 });
 
 // Update lead
-app.put('/api/leads/:id', (req, res) => {
+app.put('/api/leads/:id', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
         const index = leads.findIndex(l => l.id === req.params.id);
@@ -143,7 +151,7 @@ app.put('/api/leads/:id', (req, res) => {
 });
 
 // Delete lead
-app.delete('/api/leads/:id', (req, res) => {
+app.delete('/api/leads/:id', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
         const filteredLeads = leads.filter(l => l.id !== req.params.id);
@@ -163,7 +171,7 @@ app.delete('/api/leads/:id', (req, res) => {
 });
 
 // Get leads by status
-app.get('/api/leads/status/:status', (req, res) => {
+app.get('/api/leads/status/:status', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
         const filteredLeads = leads.filter(l => l.status === req.params.status);
@@ -174,7 +182,7 @@ app.get('/api/leads/status/:status', (req, res) => {
 });
 
 // Get statistics
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', authenticateToken, (req, res) => {
     try {
         const leads = readLeads();
 
