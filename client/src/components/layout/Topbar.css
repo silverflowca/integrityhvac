@@ -226,7 +226,7 @@
 }
 
 @media (max-width: 480px) {
-    .topbar-actions .btn-secondary:not(:last-of-type) {
+    .topbar-actions .btn-secondary:last-of-type {
         display: none;
     }
 
