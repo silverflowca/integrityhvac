@@ -13,5 +13,8 @@ if [ ! -f /app/data/leads.json ]; then
     echo "[]" > /app/data/leads.json
 fi
 
-# Start the Node.js server
-exec node server.js
+# Set ownership to node user
+chown -R node:node /app/data
+
+# Switch to node user and start the Node.js server
+exec su-exec node node server.js

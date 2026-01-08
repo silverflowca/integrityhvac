@@ -13,8 +13,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install build dependencies for bcrypt
-RUN apk add --no-cache python3 make g++
+# Install build dependencies for bcrypt and su-exec for user switching
+RUN apk add --no-cache python3 make g++ su-exec
 
 # Copy server files
 COPY server/package*.json ./
@@ -31,11 +31,8 @@ RUN mkdir -p /app/data && \
     chmod -R 755 /app/data && \
     chmod +x /app/entrypoint.sh
 
-# Switch to node user for security
-USER node
-
 # Expose port 8677
 EXPOSE 8677
 
-# Use entrypoint script to initialize data files
+# Use entrypoint script to initialize data files (runs as root, then switches to node user)
 ENTRYPOINT ["/app/entrypoint.sh"]
