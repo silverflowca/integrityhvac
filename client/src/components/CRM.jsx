@@ -8,6 +8,9 @@ import LeadFilters from './leads/LeadFilters';
 import LeadForm from './leads/LeadForm';
 import PhoneCall from './common/PhoneCall';
 import Settings from './common/Settings';
+import IndividualDashboard from './dashboard/IndividualDashboard';
+import AdminDashboard from './dashboard/AdminDashboard';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import '../App.css';
 
@@ -325,44 +328,52 @@ function CRM() {
             />
 
             <main className="main-content">
-                <Topbar
-                    title="All Leads"
-                    onAddLead={handleAddLead}
-                    searchTerm={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    onOpenSettings={() => setShowSettings(true)}
-                    viewMode={viewMode}
-                    onViewModeChange={setViewMode}
-                    onToggleMobileMenu={toggleMobileMenu}
-                />
+                {activeView === 'dashboard' ? (
+                    <div className="content-area">
+                        <IndividualDashboard />
+                    </div>
+                ) : (
+                    <>
+                        <Topbar
+                            title="All Leads"
+                            onAddLead={handleAddLead}
+                            searchTerm={searchTerm}
+                            onSearchChange={setSearchTerm}
+                            onOpenSettings={() => setShowSettings(true)}
+                            viewMode={viewMode}
+                            onViewModeChange={setViewMode}
+                            onToggleMobileMenu={toggleMobileMenu}
+                        />
 
-                {(viewMode === 'card' || viewMode === 'list') && (
-                    <LeadFilters
-                        filters={filters}
-                        onFilterChange={handleFilterChange}
-                        onSortChange={handleSortChange}
-                        onGroupChange={handleGroupChange}
-                        leadCount={filteredLeads.length}
-                    />
+                        {(viewMode === 'card' || viewMode === 'list') && (
+                            <LeadFilters
+                                filters={filters}
+                                onFilterChange={handleFilterChange}
+                                onSortChange={handleSortChange}
+                                onGroupChange={handleGroupChange}
+                                leadCount={filteredLeads.length}
+                            />
+                        )}
+
+                        <div className="content-area">
+                            {loading ? (
+                                <div className="loading-state">
+                                    <div className="spinner"></div>
+                                    <p>Loading leads...</p>
+                                </div>
+                            ) : error ? (
+                                <div className="error-state">
+                                    <p>{error}</p>
+                                    <button className="btn btn-primary" onClick={fetchLeads}>
+                                        Retry
+                                    </button>
+                                </div>
+                            ) : (
+                                renderLeadsView()
+                            )}
+                        </div>
+                    </>
                 )}
-
-                <div className="content-area">
-                    {loading ? (
-                        <div className="loading-state">
-                            <div className="spinner"></div>
-                            <p>Loading leads...</p>
-                        </div>
-                    ) : error ? (
-                        <div className="error-state">
-                            <p>{error}</p>
-                            <button className="btn btn-primary" onClick={fetchLeads}>
-                                Retry
-                            </button>
-                        </div>
-                    ) : (
-                        renderLeadsView()
-                    )}
-                </div>
             </main>
 
             {showForm && (

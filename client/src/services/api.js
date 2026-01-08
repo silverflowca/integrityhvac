@@ -124,6 +124,22 @@ class ApiService {
     async getCurrentUser() {
         return this.request('/auth/me');
     }
+
+    // Dashboard endpoints
+    async getAdminDashboard() {
+        return this.request('/dashboard/admin');
+    }
+
+    async getIndividualDashboard() {
+        return this.request('/dashboard/individual');
+    }
+
+    async logActivity(activityData) {
+        return this.request('/dashboard/activity', {
+            method: 'POST',
+            body: JSON.stringify(activityData)
+        });
+    }
 }
 
 export default new ApiService();
