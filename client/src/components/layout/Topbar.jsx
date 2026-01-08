@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import './Topbar.css';
 
-const Topbar = ({ title, onAddLead, searchTerm, onSearchChange, onOpenSettings, viewMode, onViewModeChange }) => {
+const Topbar = ({ title, onAddLead, searchTerm, onSearchChange, onOpenSettings, viewMode, onViewModeChange, onToggleMobileMenu }) => {
     const { user, logout } = useAuth();
 
     const handleLogout = () => {
@@ -13,7 +13,14 @@ const Topbar = ({ title, onAddLead, searchTerm, onSearchChange, onOpenSettings, 
 
     return (
         <div className="topbar">
-            <h1 className="topbar-title">{title}</h1>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                {onToggleMobileMenu && (
+                    <button className="mobile-menu-btn" onClick={onToggleMobileMenu} title="Menu">
+                        ☰
+                    </button>
+                )}
+                <h1 className="topbar-title">{title}</h1>
+            </div>
             <div className="topbar-actions">
                 <div className="search-wrapper">
                     <span className="search-icon">🔍</span>

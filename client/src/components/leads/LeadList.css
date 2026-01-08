@@ -31,3 +31,36 @@
     font-size: 14px;
     color: var(--text-secondary);
 }
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+    .lead-list {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        padding: 16px;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .lead-list {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .empty-state {
+        padding: 40px 16px;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+    }
+
+    .empty-state p {
+        font-size: 13px;
+    }
+}

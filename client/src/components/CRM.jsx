@@ -22,6 +22,7 @@ function CRM() {
     const [error, setError] = useState(null);
     const [activeCall, setActiveCall] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Fetch leads on mount
     useEffect(() => {
@@ -124,6 +125,14 @@ function CRM() {
         setActiveCall(null);
     };
 
+    const toggleMobileMenu = () => {
+        setMobileMenuOpen(!mobileMenuOpen);
+    };
+
+    const closeMobileMenu = () => {
+        setMobileMenuOpen(false);
+    };
+
     const renderLeadsView = () => {
         if (viewMode === 'list') {
             return (
@@ -161,10 +170,15 @@ function CRM() {
 
     return (
         <div className="app-container">
+            {/* Mobile overlay */}
+            <div className={'sidebar-overlay ' + (mobileMenuOpen ? 'active' : '')} onClick={closeMobileMenu}></div>
+
             <Sidebar
                 activeView={activeView}
                 onViewChange={setActiveView}
                 leadCount={leads.length}
+                mobileOpen={mobileMenuOpen}
+                onClose={closeMobileMenu}
             />
 
             <main className="main-content">
@@ -176,6 +190,7 @@ function CRM() {
                     onOpenSettings={() => setShowSettings(true)}
                     viewMode={viewMode}
                     onViewModeChange={setViewMode}
+                    onToggleMobileMenu={toggleMobileMenu}
                 />
 
                 <div className="content-area">

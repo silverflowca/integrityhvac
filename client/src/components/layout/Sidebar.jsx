@@ -1,9 +1,16 @@
 import React from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ activeView, onViewChange, leadCount }) => {
+const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) => {
+    const handleNavClick = (view) => {
+        onViewChange(view);
+        if (onClose) {
+            onClose();
+        }
+    };
+
     return (
-        <aside className="sidebar">
+        <aside className={'sidebar ' + (mobileOpen ? 'mobile-open' : '')}>
             <div className="logo">
                 <div className="logo-title">SalesTrack Pro</div>
                 <div className="logo-subtitle">HVAC Cold Calling</div>
@@ -22,23 +29,23 @@ const Sidebar = ({ activeView, onViewChange, leadCount }) => {
             <nav className="nav-menu">
                 <div className="nav-section">
                     <div
-                        className={`nav-item ${activeView === 'leads' ? 'active' : ''}`}
-                        onClick={() => onViewChange('leads')}
+                        className={'nav-item ' + (activeView === 'leads' ? 'active' : '')}
+                        onClick={() => handleNavClick('leads')}
                     >
                         <span className="nav-icon">📋</span>
                         All Leads
                         <span className="nav-badge">{leadCount}</span>
                     </div>
                     <div
-                        className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`}
-                        onClick={() => onViewChange('dashboard')}
+                        className={'nav-item ' + (activeView === 'dashboard' ? 'active' : '')}
+                        onClick={() => handleNavClick('dashboard')}
                     >
                         <span className="nav-icon">📊</span>
                         Dashboard
                     </div>
                     <div
-                        className={`nav-item ${activeView === 'call-queue' ? 'active' : ''}`}
-                        onClick={() => onViewChange('call-queue')}
+                        className={'nav-item ' + (activeView === 'call-queue' ? 'active' : '')}
+                        onClick={() => handleNavClick('call-queue')}
                     >
                         <span className="nav-icon">📞</span>
                         Call Queue
@@ -48,29 +55,29 @@ const Sidebar = ({ activeView, onViewChange, leadCount }) => {
                 <div className="nav-section">
                     <div className="nav-section-title">Management</div>
                     <div
-                        className={`nav-item ${activeView === 'contacts' ? 'active' : ''}`}
-                        onClick={() => onViewChange('contacts')}
+                        className={'nav-item ' + (activeView === 'contacts' ? 'active' : '')}
+                        onClick={() => handleNavClick('contacts')}
                     >
                         <span className="nav-icon">👥</span>
                         Contacts
                     </div>
                     <div
-                        className={`nav-item ${activeView === 'reports' ? 'active' : ''}`}
-                        onClick={() => onViewChange('reports')}
+                        className={'nav-item ' + (activeView === 'reports' ? 'active' : '')}
+                        onClick={() => handleNavClick('reports')}
                     >
                         <span className="nav-icon">📈</span>
                         Reports
                     </div>
                     <div
-                        className={`nav-item ${activeView === 'automation' ? 'active' : ''}`}
-                        onClick={() => onViewChange('automation')}
+                        className={'nav-item ' + (activeView === 'automation' ? 'active' : '')}
+                        onClick={() => handleNavClick('automation')}
                     >
                         <span className="nav-icon">⚡</span>
                         Automation
                     </div>
                     <div
-                        className={`nav-item ${activeView === 'settings' ? 'active' : ''}`}
-                        onClick={() => onViewChange('settings')}
+                        className={'nav-item ' + (activeView === 'settings' ? 'active' : '')}
+                        onClick={() => handleNavClick('settings')}
                     >
                         <span className="nav-icon">⚙️</span>
                         Settings

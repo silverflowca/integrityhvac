@@ -158,3 +158,61 @@
 .status-select:focus {
     outline: none;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .lead-card {
+        border-radius: 6px;
+    }
+
+    .lead-header {
+        padding: 12px;
+    }
+
+    .lead-company {
+        font-size: 15px;
+    }
+
+    .lead-contact-name {
+        font-size: 13px;
+    }
+
+    .btn-icon {
+        padding: 4px 6px;
+        font-size: 14px;
+    }
+
+    .lead-details {
+        padding: 0 12px;
+        gap: 6px;
+    }
+
+    .lead-detail-item {
+        font-size: 12px;
+    }
+
+    .btn-call {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .lead-notes {
+        margin: 0 12px 10px 12px;
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .lead-footer {
+        padding: 10px 12px;
+    }
+
+    .tag {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .status-select {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+}
