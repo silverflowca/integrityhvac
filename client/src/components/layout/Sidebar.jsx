@@ -41,7 +41,14 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
                         onClick={() => handleNavClick('dashboard')}
                     >
                         <span className="nav-icon">📊</span>
-                        Dashboard
+                        My Dashboard
+                    </div>
+                    <div
+                        className={'nav-item ' + (activeView === 'team-dashboard' ? 'active' : '')}
+                        onClick={() => handleNavClick('team-dashboard')}
+                    >
+                        <span className="nav-icon">👥</span>
+                        Team Dashboard
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'call-queue' ? 'active' : '')}

@@ -78,6 +78,14 @@ function AdminDashboard() {
         rate: parseFloat(user.conversionRate)
     }));
 
+    // Call minutes data - sorted by total minutes descending
+    const callMinutesData = stats.userStats
+        .map(user => ({
+            name: user.name,
+            minutes: user.totalCallMinutes || 0
+        }))
+        .sort((a, b) => b.minutes - a.minutes);
+
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
@@ -142,6 +150,21 @@ function AdminDashboard() {
 
             {/* Charts Row */}
             <div className="charts-grid">
+                {/* Total Call Minutes by User - Horizontal Bar Chart */}
+                <div className="chart-card full-width">
+                    <h3>Total Call Minutes by User</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={callMinutesData} layout="vertical">
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis type="number" />
+                            <YAxis dataKey="name" type="category" width={120} />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="minutes" fill="#10b981" name="Minutes" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
                 {/* Team Performance */}
                 <div className="chart-card full-width">
                     <h3>Team Performance</h3>
@@ -218,6 +241,7 @@ function AdminDashboard() {
                             <tr>
                                 <th>Team Member</th>
                                 <th>Total Calls</th>
+                                <th>Call Minutes</th>
                                 <th>Total Leads</th>
                                 <th>Won Leads</th>
                                 <th>Conversion Rate</th>
@@ -228,6 +252,7 @@ function AdminDashboard() {
                                 <tr key={user.userId}>
                                     <td><strong>{user.name}</strong></td>
                                     <td>{user.totalCalls}</td>
+                                    <td>{user.totalCallMinutes || 0} min</td>
                                     <td>{user.totalLeads}</td>
                                     <td className="won">{user.wonLeads}</td>
                                     <td>

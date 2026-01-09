@@ -334,6 +334,10 @@ function CRM() {
                     <div className="content-area">
                         <IndividualDashboard />
                     </div>
+                ) : activeView === 'team-dashboard' ? (
+                    <div className="content-area">
+                        <AdminDashboard />
+                    </div>
                 ) : (
                     <>
                         <Topbar

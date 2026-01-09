@@ -97,7 +97,13 @@ router.get('/admin', (req, res) => {
         // User performance (calls per user)
         const userStats = users.map(user => {
             const userActivities = activities.filter(a => a.userId === user.id);
-            const userCalls = userActivities.filter(a => a.type === 'call').length;
+            const userCallActivities = userActivities.filter(a => a.type === 'call');
+            const userCalls = userCallActivities.length;
+
+            // Calculate total call minutes
+            const totalCallSeconds = userCallActivities.reduce((sum, a) => sum + (a.duration || 0), 0);
+            const totalCallMinutes = Math.round(totalCallSeconds / 60);
+
             const userLeads = leads.filter(l => l.assignedTo === user.id);
             const userWonLeads = userLeads.filter(l => l.status === 'won').length;
 
@@ -105,6 +111,7 @@ router.get('/admin', (req, res) => {
                 userId: user.id,
                 name: user.name,
                 totalCalls: userCalls,
+                totalCallMinutes: totalCallMinutes,
                 totalLeads: userLeads.length,
                 wonLeads: userWonLeads,
                 conversionRate: userLeads.length > 0 ? ((userWonLeads / userLeads.length) * 100).toFixed(1) : 0
