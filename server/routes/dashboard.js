@@ -55,6 +55,16 @@ const writeActivities = (activities) => {
     }
 };
 
+const writeLeads = (leads) => {
+    try {
+        fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Error writing leads:', error);
+        return false;
+    }
+};
+
 // Get admin dashboard stats (team overview)
 router.get('/admin', (req, res) => {
     try {
@@ -241,6 +251,27 @@ router.post('/activity', (req, res) => {
 
         activities.push(newActivity);
         writeActivities(activities);
+
+        // If this is a call activity with notes and a leadId, append notes to the lead
+        if (type === 'call' && notes && notes.trim() && leadId) {
+            const leads = readLeads();
+            const leadIndex = leads.findIndex(l => l.id === leadId);
+
+            if (leadIndex !== -1) {
+                const timestamp = new Date().toLocaleString();
+                const callNote = `[Call - ${timestamp}] ${notes.trim()}`;
+
+                // Append to existing notes or create new notes field
+                if (leads[leadIndex].notes && leads[leadIndex].notes.trim()) {
+                    leads[leadIndex].notes = leads[leadIndex].notes.trim() + '\n\n' + callNote;
+                } else {
+                    leads[leadIndex].notes = callNote;
+                }
+
+                writeLeads(leads);
+                console.log(`Call notes appended to lead ${leadId}`);
+            }
+        }
 
         res.status(201).json({
             success: true,
