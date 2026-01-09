@@ -258,6 +258,99 @@
     color: #991b1b;
 }
 
+/* Time Breakdown Card */
+.time-breakdown-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.time-breakdown-card h3 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 24px 0;
+    color: white;
+    text-align: center;
+}
+
+.time-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.time-period-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.time-period-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.time-period-card.today {
+    border-color: #fbbf24;
+}
+
+.time-period-card.week {
+    border-color: #60a5fa;
+}
+
+.time-period-card.month {
+    border-color: #34d399;
+}
+
+.time-period-card.year {
+    border-color: #f472b6;
+}
+
+.period-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.period-content {
+    color: white;
+}
+
+.period-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+.period-value {
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.period-unit {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
 /* Activity Card */
 .activity-card {
     background: var(--bg-primary);
@@ -347,6 +440,44 @@
         grid-template-columns: 1fr;
         gap: 12px;
         margin-bottom: 16px;
+    }
+
+    /* Time breakdown card responsive */
+    .time-breakdown-card {
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .time-breakdown-card h3 {
+        font-size: 18px;
+        margin-bottom: 16px;
+    }
+
+    .time-breakdown-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .time-period-card {
+        padding: 16px;
+    }
+
+    .period-icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+
+    .period-label {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .period-value {
+        font-size: 32px;
+    }
+
+    .period-unit {
+        font-size: 12px;
     }
 
     .metric-card {

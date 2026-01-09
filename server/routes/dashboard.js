@@ -118,6 +118,40 @@ router.get('/admin', (req, res) => {
             };
         });
 
+        // Calculate total call minutes by time period
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - 7);
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+
+        const callActivities = activities.filter(a => a.type === 'call');
+
+        const callMinutesToday = Math.round(
+            callActivities
+                .filter(a => new Date(a.timestamp) >= todayStart)
+                .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
+        );
+
+        const callMinutesWeek = Math.round(
+            callActivities
+                .filter(a => new Date(a.timestamp) >= weekStart)
+                .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
+        );
+
+        const callMinutesMonth = Math.round(
+            callActivities
+                .filter(a => new Date(a.timestamp) >= monthStart)
+                .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
+        );
+
+        const callMinutesYear = Math.round(
+            callActivities
+                .filter(a => new Date(a.timestamp) >= yearStart)
+                .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
+        );
+
         // Recent activity timeline (last 7 days)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -137,6 +171,10 @@ router.get('/admin', (req, res) => {
                 totalCalls,
                 totalEmails,
                 totalNotes,
+                callMinutesToday,
+                callMinutesWeek,
+                callMinutesMonth,
+                callMinutesYear,
                 statusBreakdown,
                 priorityBreakdown,
                 userStats,

@@ -148,6 +148,45 @@ function AdminDashboard() {
                 </div>
             </div>
 
+            {/* Call Minutes Time Breakdown Card */}
+            <div className="time-breakdown-card">
+                <h3>📞 Total Call Minutes</h3>
+                <div className="time-breakdown-grid">
+                    <div className="time-period-card today">
+                        <div className="period-icon">📅</div>
+                        <div className="period-content">
+                            <div className="period-label">Today</div>
+                            <div className="period-value">{stats.callMinutesToday || 0}</div>
+                            <div className="period-unit">minutes</div>
+                        </div>
+                    </div>
+                    <div className="time-period-card week">
+                        <div className="period-icon">📊</div>
+                        <div className="period-content">
+                            <div className="period-label">This Week</div>
+                            <div className="period-value">{stats.callMinutesWeek || 0}</div>
+                            <div className="period-unit">minutes</div>
+                        </div>
+                    </div>
+                    <div className="time-period-card month">
+                        <div className="period-icon">📈</div>
+                        <div className="period-content">
+                            <div className="period-label">This Month</div>
+                            <div className="period-value">{stats.callMinutesMonth || 0}</div>
+                            <div className="period-unit">minutes</div>
+                        </div>
+                    </div>
+                    <div className="time-period-card year">
+                        <div className="period-icon">🎯</div>
+                        <div className="period-content">
+                            <div className="period-label">This Year</div>
+                            <div className="period-value">{stats.callMinutesYear || 0}</div>
+                            <div className="period-unit">minutes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Charts Row */}
             <div className="charts-grid">
                 {/* Total Call Minutes by User - Horizontal Bar Chart */}

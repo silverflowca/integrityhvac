@@ -85,6 +85,10 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
         const cleanNumber = phoneNumber.replace(/\D/g, '');
         const target = `sip:${cleanNumber}@${SIP_CONFIG.sipServer}`;
         console.log(target,cleanNumber)
+
+        // Set call start time immediately when initiating
+        callStartTimeRef.current = Date.now();
+
         // Use the exact same simple options as the working example
         const options = {
             mediaConstraints: { audio: true, video: false },
@@ -113,7 +117,7 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
         session.on('accepted', () => {
             console.log('Call accepted');
             setCallStatus('connected');
-            callStartTimeRef.current = Date.now();
+            // Don't reset callStartTimeRef - it was already set when call was initiated
             startTimer();
         });
 
@@ -156,7 +160,17 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
     };
 
     const saveCallNotes = async () => {
-        if (!notes.trim() && callDuration === 0) {
+        // Calculate final duration - if call was connected, use callDuration
+        // Otherwise, calculate time from call start to now
+        let finalDuration = callDuration;
+
+        if (finalDuration === 0 && callStartTimeRef.current) {
+            // Call was initiated but not connected, calculate elapsed time
+            const elapsedSeconds = Math.floor((Date.now() - callStartTimeRef.current) / 1000);
+            finalDuration = elapsedSeconds;
+        }
+
+        if (!notes.trim() && finalDuration === 0) {
             return; // Nothing to save
         }
 
@@ -166,7 +180,7 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
             await api.logActivity({
                 type: 'call',
                 leadId: leadId,
-                duration: callDuration,
+                duration: finalDuration,
                 notes: notes.trim() || `Called ${phoneNumber}`
             });
 
