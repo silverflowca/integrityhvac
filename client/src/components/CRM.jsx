@@ -183,12 +183,14 @@ function CRM() {
         setEditingLead(null);
     };
 
-    const handleCall = (phoneNumber) => {
-        setActiveCall(phoneNumber);
+    const handleCall = (phoneNumber, leadId) => {
+        setActiveCall({ phoneNumber, leadId });
     };
 
     const handleCloseCall = () => {
         setActiveCall(null);
+        // Refresh leads to show updated notes
+        fetchLeads();
     };
 
     const toggleMobileMenu = () => {
@@ -386,7 +388,8 @@ function CRM() {
 
             {activeCall && (
                 <PhoneCall
-                    phoneNumber={activeCall}
+                    phoneNumber={activeCall.phoneNumber}
+                    leadId={activeCall.leadId}
                     onClose={handleCloseCall}
                 />
             )}

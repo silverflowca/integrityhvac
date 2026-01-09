@@ -29,7 +29,7 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
 
     const handleCall = () => {
         if (lead.phone) {
-            onCall(lead.phone);
+            onCall(lead.phone, lead.id);
         }
     };
 

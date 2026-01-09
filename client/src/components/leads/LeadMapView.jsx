@@ -182,7 +182,7 @@ const LeadMapView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall }
                                 {selectedLead.phone && (
                                     <button
                                         className="btn-call-popup"
-                                        onClick={() => onCall(selectedLead.phone)}
+                                        onClick={() => onCall(selectedLead.phone, selectedLead.id)}
                                     >
                                         Call
                                     </button>

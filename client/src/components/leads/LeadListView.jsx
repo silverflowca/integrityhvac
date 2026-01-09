@@ -27,9 +27,9 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
         onUpdateStatus(leadId, newStatus);
     };
 
-    const handleCall = (phoneNumber) => {
+    const handleCall = (phoneNumber, leadId) => {
         if (phoneNumber) {
-            onCall(phoneNumber);
+            onCall(phoneNumber, leadId);
         }
     };
 
@@ -80,7 +80,7 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                                         <span>{lead.phone}</span>
                                         <button
                                             className="btn-call-small"
-                                            onClick={() => handleCall(lead.phone)}
+                                            onClick={() => handleCall(lead.phone, lead.id)}
                                             title="Call"
                                         >
                                             📞

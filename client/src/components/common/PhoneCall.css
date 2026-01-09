@@ -76,6 +76,52 @@
     display: inline-block;
 }
 
+/* Call Notes Section */
+.call-notes-section {
+    margin-bottom: 24px;
+}
+
+.notes-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.call-notes-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.2s;
+}
+
+.call-notes-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.call-notes-textarea:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.notes-hint {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 6px;
+    font-style: italic;
+}
+
 .dtmf-pad {
     margin-bottom: 24px;
 }

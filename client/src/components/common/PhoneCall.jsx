@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import JsSIP from 'jssip';
+import api from '../../services/api';
 import './PhoneCall.css';
 
-const PhoneCall = ({ phoneNumber, onClose }) => {
+const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
     const [callStatus, setCallStatus] = useState('connecting');
     const [callDuration, setCallDuration] = useState(0);
+    const [notes, setNotes] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
     const sessionRef = useRef(null);
     const uaRef = useRef(null);
     const timerRef = useRef(null);
     const remoteAudioRef = useRef(null);
+    const callStartTimeRef = useRef(null);
 
     // Load SIP configuration from localStorage or use defaults
     const getSipConfig = () => {
@@ -109,6 +113,7 @@ const PhoneCall = ({ phoneNumber, onClose }) => {
         session.on('accepted', () => {
             console.log('Call accepted');
             setCallStatus('connected');
+            callStartTimeRef.current = Date.now();
             startTimer();
         });
 
@@ -150,7 +155,40 @@ const PhoneCall = ({ phoneNumber, onClose }) => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const handleHangup = () => {
+    const saveCallNotes = async () => {
+        if (!notes.trim() && callDuration === 0) {
+            return; // Nothing to save
+        }
+
+        setIsSaving(true);
+        try {
+            // Log the call activity
+            await api.logActivity({
+                type: 'call',
+                leadId: leadId,
+                duration: callDuration,
+                notes: notes.trim() || `Called ${phoneNumber}`
+            });
+
+            // If there are notes and a callback, notify parent
+            if (notes.trim() && onNoteSaved) {
+                onNoteSaved(notes.trim());
+            }
+
+            console.log('Call notes saved successfully');
+        } catch (error) {
+            console.error('Error saving call notes:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleHangup = async () => {
+        // Save notes before closing if there are any
+        if ((notes.trim() || callDuration > 0) && leadId) {
+            await saveCallNotes();
+        }
+
         // Stop the timer first
         if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -242,6 +280,24 @@ const PhoneCall = ({ phoneNumber, onClose }) => {
                     </div>
                 </div>
 
+                {/* Call Notes Section */}
+                <div className="call-notes-section">
+                    <label htmlFor="call-notes" className="notes-label">
+                        Call Notes
+                    </label>
+                    <textarea
+                        id="call-notes"
+                        className="call-notes-textarea"
+                        placeholder="Take notes during the call..."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        rows={4}
+                    />
+                    <div className="notes-hint">
+                        Notes will be saved automatically when you end the call
+                    </div>
+                </div>
+
                 {callStatus === 'connected' && (
                     <div className="dtmf-pad">
                         <div className="dtmf-title">Dial Pad</div>
@@ -260,8 +316,12 @@ const PhoneCall = ({ phoneNumber, onClose }) => {
                 )}
 
                 <div className="call-actions">
-                    <button className="btn-hangup" onClick={handleHangup}>
-                        {callStatus === 'ended' || callStatus === 'failed' ? 'Close' : 'Hang Up'}
+                    <button
+                        className="btn-hangup"
+                        onClick={handleHangup}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : (callStatus === 'ended' || callStatus === 'failed' ? 'Close' : 'Hang Up')}
                     </button>
                 </div>
 
