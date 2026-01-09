@@ -191,3 +191,119 @@
 .btn-hangup:active {
     transform: translateY(0);
 }
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .phone-call-modal {
+        width: 95%;
+        max-width: none;
+        padding: 20px;
+        max-height: 90vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .call-header {
+        margin-bottom: 20px;
+    }
+
+    .call-status-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    .call-number {
+        font-size: 22px;
+        margin-bottom: 8px;
+    }
+
+    .call-status {
+        font-size: 14px;
+    }
+
+    .call-duration {
+        font-size: 18px;
+        padding: 6px 12px;
+    }
+
+    .call-notes-section {
+        margin-bottom: 16px;
+    }
+
+    .call-notes-textarea {
+        min-height: 60px;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .dtmf-pad {
+        margin-bottom: 16px;
+    }
+
+    .dtmf-title {
+        font-size: 12px;
+        margin-bottom: 12px;
+    }
+
+    .dtmf-grid {
+        gap: 8px;
+    }
+
+    .dtmf-button {
+        font-size: 20px;
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .call-actions {
+        margin-top: auto;
+        padding-top: 16px;
+    }
+
+    .btn-hangup {
+        padding: 14px 36px;
+        font-size: 15px;
+        width: 100%;
+    }
+}
+
+/* Extra small phones */
+@media (max-width: 400px) {
+    .phone-call-modal {
+        padding: 16px;
+        max-height: 85vh;
+    }
+
+    .call-status-icon {
+        font-size: 40px;
+        margin-bottom: 8px;
+    }
+
+    .call-number {
+        font-size: 20px;
+    }
+
+    .call-duration {
+        font-size: 16px;
+    }
+
+    .call-notes-textarea {
+        min-height: 50px;
+        font-size: 13px;
+    }
+
+    .dtmf-grid {
+        gap: 6px;
+    }
+
+    .dtmf-button {
+        font-size: 18px;
+        padding: 10px;
+    }
+
+    .btn-hangup {
+        padding: 12px 32px;
+        font-size: 14px;
+    }
+}

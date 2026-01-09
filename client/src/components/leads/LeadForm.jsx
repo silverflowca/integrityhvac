@@ -82,18 +82,6 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                 <form onSubmit={handleSubmit} className="lead-form">
                     <div className="form-grid">
                         <div className="form-group">
-                            <label>Company Name *</label>
-                            <input
-                                type="text"
-                                name="company"
-                                value={formData.company}
-                                onChange={handleChange}
-                                required
-                                placeholder="Enter company name"
-                            />
-                        </div>
-
-                        <div className="form-group">
                             <label>Contact Name *</label>
                             <input
                                 type="text"
@@ -102,6 +90,17 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                                 onChange={handleChange}
                                 required
                                 placeholder="Enter contact name"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Company Name</label>
+                            <input
+                                type="text"
+                                name="company"
+                                value={formData.company}
+                                onChange={handleChange}
+                                placeholder="Enter company name (optional)"
                             />
                         </div>
 

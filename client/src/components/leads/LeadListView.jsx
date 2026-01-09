@@ -49,8 +49,8 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                 <thead>
                     <tr>
                         <th>Status</th>
+                        <th>Name</th>
                         <th>Company</th>
-                        <th>Contact</th>
                         <th>Phone</th>
                         <th>Email</th>
                         <th>Location</th>
@@ -70,10 +70,10 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                                     title={lead.status || 'new'}
                                 ></span>
                             </td>
-                            <td className="lead-company-cell">
-                                <strong>{lead.company || 'No Company'}</strong>
+                            <td className="lead-name-cell">
+                                <strong>{lead.name || 'No Name'}</strong>
                             </td>
-                            <td>{lead.name || 'No Name'}</td>
+                            <td>{lead.company || '-'}</td>
                             <td className="phone-cell">
                                 {lead.phone ? (
                                     <>

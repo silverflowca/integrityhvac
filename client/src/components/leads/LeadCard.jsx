@@ -73,9 +73,18 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
                             style={{ backgroundColor: STATUS_COLORS[lead.status] || '#94a3b8' }}
                             title={lead.status || 'new'}
                         ></span>
-                        <h3 className="lead-company">{lead.company || 'No Company'}</h3>
+                        <h3 className="lead-company">{lead.name || 'No Name'}</h3>
                     </div>
-                    <div className="lead-contact-name">{lead.name || 'No Name'}</div>
+                    {lead.company && (
+                        <div className="lead-contact-name" style={{ fontSize: '13px', opacity: 0.8, marginTop: '2px' }}>
+                            {lead.company}
+                        </div>
+                    )}
+                    {lead.location && (
+                        <div className="lead-location-subtitle" style={{ fontSize: '12px', opacity: 0.7, marginTop: '2px' }}>
+                            📍 {lead.location}
+                        </div>
+                    )}
                 </div>
                 <div className="lead-actions">
                     <button className="btn-icon" onClick={() => onEdit(lead)} title="Edit">
@@ -101,14 +110,12 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
                         </button>
                     )}
                 </div>
-                <div className="lead-detail-item">
-                    <span className="detail-icon">✉️</span>
-                    <span className="detail-text">{lead.email || 'No email'}</span>
-                </div>
-                <div className="lead-detail-item">
-                    <span className="detail-icon">📍</span>
-                    <span className="detail-text">{lead.location || 'No location'}</span>
-                </div>
+                {lead.email && (
+                    <div className="lead-detail-item">
+                        <span className="detail-icon">✉️</span>
+                        <span className="detail-text">{lead.email}</span>
+                    </div>
+                )}
                 <div className="lead-detail-item">
                     <span className="detail-icon">📅</span>
                     <span className="detail-text">Created: {formatDate(lead.createdAt)}</span>
