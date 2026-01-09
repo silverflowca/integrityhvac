@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import dashboardRoutes from './routes/dashboard.js';
+import statusRoutes from './routes/statuses.js';
 import { authenticateToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -72,6 +73,9 @@ app.use('/api/auth', authRoutes);
 
 // Dashboard routes (protected)
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
+
+// Status routes (protected)
+app.use('/api/statuses', authenticateToken, statusRoutes);
 
 // Health check (public)
 app.get('/api/health', (req, res) => {

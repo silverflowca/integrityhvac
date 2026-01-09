@@ -194,8 +194,8 @@ router.get('/individual', (req, res) => {
         const leads = readLeads();
         const activities = readActivities();
 
-        // User's leads
-        const userLeads = leads.filter(l => l.assignedTo === userId || !l.assignedTo);
+        // User's leads (ONLY assigned to this user)
+        const userLeads = leads.filter(l => l.assignedTo === userId);
         const totalLeads = userLeads.length;
 
         // Status breakdown

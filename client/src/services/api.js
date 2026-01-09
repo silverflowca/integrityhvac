@@ -140,6 +140,30 @@ class ApiService {
             body: JSON.stringify(activityData)
         });
     }
+
+    // Status endpoints
+    async getStatuses() {
+        return this.request('/statuses');
+    }
+
+    async addStatus(name) {
+        return this.request('/statuses', {
+            method: 'POST',
+            body: JSON.stringify({ name })
+        });
+    }
+
+    async deleteStatus(id) {
+        return this.request(`/statuses/${id}`, {
+            method: 'DELETE'
+        });
+    }
+
+    async resetStatuses() {
+        return this.request('/statuses/reset', {
+            method: 'POST'
+        });
+    }
 }
 
 export default new ApiService();

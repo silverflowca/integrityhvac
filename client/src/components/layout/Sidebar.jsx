@@ -1,12 +1,25 @@
 import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) => {
+    const { user } = useAuth();
+
     const handleNavClick = (view) => {
         onViewChange(view);
         if (onClose) {
             onClose();
         }
+    };
+
+    // Generate initials from user name
+    const getInitials = (name) => {
+        if (!name) return 'U';
+        const parts = name.trim().split(' ');
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
     };
 
     return (
@@ -18,10 +31,10 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
 
             <div className="user-info">
                 <div className="user-profile">
-                    <div className="user-avatar">MT</div>
+                    <div className="user-avatar">{user ? getInitials(user.name) : 'U'}</div>
                     <div className="user-details">
-                        <h3>Mike Thompson</h3>
-                        <div className="user-role">Sales Rep</div>
+                        <h3>{user ? user.name : 'Loading...'}</h3>
+                        <div className="user-role">{user ? (user.role || user.email) : ''}</div>
                     </div>
                 </div>
             </div>

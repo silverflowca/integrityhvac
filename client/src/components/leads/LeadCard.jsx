@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import './LeadCard.css';
 
 const STATUS_COLORS = {
@@ -7,7 +8,9 @@ const STATUS_COLORS = {
     qualified: '#8b5cf6',
     quoted: '#f59e0b',
     won: '#10b981',
-    lost: '#ef4444'
+    lost: '#ef4444',
+    do_not_call: '#94a3b8',
+    call_back: '#a855f7'
 };
 
 const PRIORITY_COLORS = {
@@ -17,10 +20,37 @@ const PRIORITY_COLORS = {
 };
 
 const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
+    const [statuses, setStatuses] = useState([]);
+
+    useEffect(() => {
+        fetchStatuses();
+    }, []);
+
+    const fetchStatuses = async () => {
+        try {
+            const response = await api.getStatuses();
+            setStatuses(response.statuses || []);
+        } catch (error) {
+            console.error('Error fetching statuses:', error);
+        }
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const formatDateTime = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
     };
 
     const handleStatusChange = (e) => {
@@ -83,6 +113,12 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
                     <span className="detail-icon">📅</span>
                     <span className="detail-text">Created: {formatDate(lead.createdAt)}</span>
                 </div>
+                {lead.callbackDate && (
+                    <div className="lead-detail-item lead-callback">
+                        <span className="detail-icon">⏰</span>
+                        <span className="detail-text"><strong>Callback:</strong> {formatDateTime(lead.callbackDate)}</span>
+                    </div>
+                )}
             </div>
 
             {lead.notes && (
@@ -105,12 +141,22 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
                         onChange={handleStatusChange}
                         style={{ borderColor: STATUS_COLORS[lead.status] || '#94a3b8' }}
                     >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="quoted">Quoted</option>
-                        <option value="won">Won</option>
-                        <option value="lost">Lost</option>
+                        {statuses.length > 0 ? (
+                            statuses.map(status => (
+                                <option key={status.id} value={status.name.toLowerCase().replace(/\s+/g, '_')}>
+                                    {status.name}
+                                </option>
+                            ))
+                        ) : (
+                            <>
+                                <option value="new">New</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="qualified">Qualified</option>
+                                <option value="quoted">Quoted</option>
+                                <option value="won">Won</option>
+                                <option value="lost">Lost</option>
+                            </>
+                        )}
                     </select>
                 </div>
             </div>

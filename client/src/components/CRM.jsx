@@ -7,7 +7,8 @@ import LeadMapView from './leads/LeadMapView';
 import LeadFilters from './leads/LeadFilters';
 import LeadForm from './leads/LeadForm';
 import PhoneCall from './common/PhoneCall';
-import Settings from './common/Settings';
+import SipSettings from './common/Settings';
+import Settings from './settings/Settings';
 import IndividualDashboard from './dashboard/IndividualDashboard';
 import AdminDashboard from './dashboard/AdminDashboard';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,7 +26,7 @@ function CRM() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeCall, setActiveCall] = useState(null);
-    const [showSettings, setShowSettings] = useState(false);
+    const [showSipSettings, setShowSipSettings] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [filters, setFilters] = useState({
         status: 'all',
@@ -331,13 +332,44 @@ function CRM() {
 
             <main className="main-content">
                 {activeView === 'dashboard' ? (
-                    <div className="content-area">
-                        <IndividualDashboard />
-                    </div>
+                    <>
+                        <Topbar
+                            title="My Dashboard"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <IndividualDashboard />
+                        </div>
+                    </>
                 ) : activeView === 'team-dashboard' ? (
-                    <div className="content-area">
-                        <AdminDashboard />
-                    </div>
+                    <>
+                        <Topbar
+                            title="Team Dashboard"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <AdminDashboard />
+                        </div>
+                    </>
+                ) : activeView === 'settings' ? (
+                    <>
+                        <Topbar
+                            title="Settings"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <Settings />
+                        </div>
+                    </>
                 ) : (
                     <>
                         <Topbar
@@ -345,7 +377,7 @@ function CRM() {
                             onAddLead={handleAddLead}
                             searchTerm={searchTerm}
                             onSearchChange={setSearchTerm}
-                            onOpenSettings={() => setShowSettings(true)}
+                            onOpenSettings={() => setShowSipSettings(true)}
                             viewMode={viewMode}
                             onViewModeChange={setViewMode}
                             onToggleMobileMenu={toggleMobileMenu}
@@ -398,8 +430,8 @@ function CRM() {
                 />
             )}
 
-            {showSettings && (
-                <Settings onClose={() => setShowSettings(false)} />
+            {showSipSettings && (
+                <SipSettings onClose={() => setShowSipSettings(false)} />
             )}
         </div>
     );

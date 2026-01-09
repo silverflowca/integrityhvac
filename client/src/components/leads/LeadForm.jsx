@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import './LeadForm.css';
 
 const LeadForm = ({ lead, onSave, onCancel }) => {
@@ -10,8 +11,15 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
         location: '',
         status: 'new',
         priority: 'warm',
-        notes: ''
+        notes: '',
+        callbackDate: ''
     });
+    const [statuses, setStatuses] = useState([]);
+    const [loadingStatuses, setLoadingStatuses] = useState(true);
+
+    useEffect(() => {
+        fetchStatuses();
+    }, []);
 
     useEffect(() => {
         if (lead) {
@@ -23,10 +31,32 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                 location: lead.location || '',
                 status: lead.status || 'new',
                 priority: lead.priority || 'warm',
-                notes: lead.notes || ''
+                notes: lead.notes || '',
+                callbackDate: lead.callbackDate || ''
             });
         }
     }, [lead]);
+
+    const fetchStatuses = async () => {
+        try {
+            setLoadingStatuses(true);
+            const response = await api.getStatuses();
+            setStatuses(response.statuses || []);
+        } catch (error) {
+            console.error('Error fetching statuses:', error);
+            // Fallback to default statuses
+            setStatuses([
+                { id: '1', name: 'New', isDefault: true },
+                { id: '2', name: 'Contacted', isDefault: true },
+                { id: '3', name: 'Qualified', isDefault: true },
+                { id: '4', name: 'Quoted', isDefault: true },
+                { id: '5', name: 'Won', isDefault: true },
+                { id: '6', name: 'Lost', isDefault: true }
+            ]);
+        } finally {
+            setLoadingStatuses(false);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -128,14 +158,29 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
+                                disabled={loadingStatuses}
                             >
-                                <option value="new">New</option>
-                                <option value="contacted">Contacted</option>
-                                <option value="qualified">Qualified</option>
-                                <option value="quoted">Quoted</option>
-                                <option value="won">Won</option>
-                                <option value="lost">Lost</option>
+                                {loadingStatuses ? (
+                                    <option>Loading...</option>
+                                ) : (
+                                    statuses.map(status => (
+                                        <option key={status.id} value={status.name.toLowerCase().replace(/\s+/g, '_')}>
+                                            {status.name}
+                                        </option>
+                                    ))
+                                )}
                             </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Callback Date</label>
+                            <input
+                                type="datetime-local"
+                                name="callbackDate"
+                                value={formData.callbackDate}
+                                onChange={handleChange}
+                                placeholder="Set callback reminder"
+                            />
                         </div>
                     </div>
 
