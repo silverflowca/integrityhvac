@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './LeadListView.css';
 
 const STATUS_COLORS = {
@@ -17,14 +17,6 @@ const PRIORITY_COLORS = {
 };
 
 const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(25);
-
-    // Reset to page 1 when leads or itemsPerPage changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [leads.length, itemsPerPage]);
-
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
@@ -41,56 +33,6 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
         }
     };
 
-    // Pagination calculations
-    const totalPages = Math.ceil(leads.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, leads.length);
-    const paginatedLeads = leads.slice(startIndex, endIndex);
-
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleItemsPerPageChange = (e) => {
-        setItemsPerPage(Number(e.target.value));
-    };
-
-    const getPageNumbers = () => {
-        const pageNumbers = [];
-        const maxVisiblePages = 7;
-
-        if (totalPages <= maxVisiblePages) {
-            for (let i = 1; i <= totalPages; i++) {
-                pageNumbers.push(i);
-            }
-        } else {
-            if (currentPage <= 4) {
-                for (let i = 1; i <= 5; i++) {
-                    pageNumbers.push(i);
-                }
-                pageNumbers.push('ellipsis');
-                pageNumbers.push(totalPages);
-            } else if (currentPage >= totalPages - 3) {
-                pageNumbers.push(1);
-                pageNumbers.push('ellipsis');
-                for (let i = totalPages - 4; i <= totalPages; i++) {
-                    pageNumbers.push(i);
-                }
-            } else {
-                pageNumbers.push(1);
-                pageNumbers.push('ellipsis');
-                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-                    pageNumbers.push(i);
-                }
-                pageNumbers.push('ellipsis');
-                pageNumbers.push(totalPages);
-            }
-        }
-
-        return pageNumbers;
-    };
-
     if (leads.length === 0) {
         return (
             <div className="empty-state">
@@ -101,67 +43,8 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
         );
     }
 
-    const PaginationControls = () => (
-        <div className="pagination-controls">
-            <div className="pagination-info">
-                <span>
-                    Showing {startIndex + 1}-{endIndex} of {leads.length} leads
-                </span>
-                <div className="items-per-page">
-                    <label htmlFor="itemsPerPage">Items per page:</label>
-                    <select
-                        id="itemsPerPage"
-                        value={itemsPerPage}
-                        onChange={handleItemsPerPageChange}
-                        className="items-per-page-select"
-                    >
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                        <option value={200}>200</option>
-                    </select>
-                </div>
-            </div>
-            <div className="pagination-buttons">
-                <button
-                    className="pagination-btn"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                >
-                    Previous
-                </button>
-                {getPageNumbers().map((pageNumber, index) => {
-                    if (pageNumber === 'ellipsis') {
-                        return (
-                            <span key={`ellipsis-${index}`} className="pagination-ellipsis">
-                                ...
-                            </span>
-                        );
-                    }
-                    return (
-                        <button
-                            key={pageNumber}
-                            className={`pagination-btn ${currentPage === pageNumber ? 'active' : ''}`}
-                            onClick={() => handlePageChange(pageNumber)}
-                        >
-                            {pageNumber}
-                        </button>
-                    );
-                })}
-                <button
-                    className="pagination-btn"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                >
-                    Next
-                </button>
-            </div>
-        </div>
-    );
-
     return (
         <div className="list-view-container">
-            <PaginationControls />
             <table className="leads-table">
                 <thead>
                     <tr>
@@ -178,7 +61,7 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                     </tr>
                 </thead>
                 <tbody>
-                    {paginatedLeads.map((lead) => (
+                    {leads.map((lead) => (
                         <tr key={lead.id} className="lead-row">
                             <td className="status-dot-cell">
                                 <span
@@ -253,7 +136,6 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                     ))}
                 </tbody>
             </table>
-            <PaginationControls />
         </div>
     );
 };

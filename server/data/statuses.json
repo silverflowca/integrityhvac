@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "name": "New",
+    "isDefault": true
+  },
+  {
+    "id": "2",
+    "name": "Contacted",
+    "isDefault": true
+  },
+  {
+    "id": "3",
+    "name": "Qualified",
+    "isDefault": true
+  },
+  {
+    "id": "4",
+    "name": "Quoted",
+    "isDefault": true
+  },
+  {
+    "id": "5",
+    "name": "Won",
+    "isDefault": true
+  },
+  {
+    "id": "6",
+    "name": "Lost",
+    "isDefault": true
+  },
+  {
+    "id": "7",
+    "name": "Do Not Call",
+    "isDefault": true
+  },
+  {
+    "id": "8",
+    "name": "Call Back",
+    "isDefault": true
+  }
+]
