@@ -12,13 +12,17 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
         status: 'new',
         priority: 'warm',
         notes: '',
-        callbackDate: ''
+        callbackDate: '',
+        assignedTo: ''
     });
     const [statuses, setStatuses] = useState([]);
     const [loadingStatuses, setLoadingStatuses] = useState(true);
+    const [users, setUsers] = useState([]);
+    const [loadingUsers, setLoadingUsers] = useState(true);
 
     useEffect(() => {
         fetchStatuses();
+        fetchUsers();
     }, []);
 
     useEffect(() => {
@@ -32,7 +36,8 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                 status: lead.status || 'new',
                 priority: lead.priority || 'warm',
                 notes: lead.notes || '',
-                callbackDate: lead.callbackDate || ''
+                callbackDate: lead.callbackDate || '',
+                assignedTo: lead.assignedTo || ''
             });
         }
     }, [lead]);
@@ -58,6 +63,19 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
         }
     };
 
+    const fetchUsers = async () => {
+        try {
+            setLoadingUsers(true);
+            const response = await api.getUsers();
+            setUsers(response.users || []);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            setUsers([]);
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -71,12 +89,61 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
         onSave(formData);
     };
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+        });
+    };
+
+    const formatDuration = (seconds) => {
+        if (!seconds) return '';
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins === 0) return `${secs}s`;
+        return `${mins}m ${secs}s`;
+    };
+
+    const formatFieldValue = (value) => {
+        if (!value || value === '') return 'empty';
+        return value;
+    };
+
+    const formatAuditAction = (entry) => {
+        if (entry.action === 'called') {
+            const duration = entry.duration ? ` (${formatDuration(entry.duration)})` : '';
+            return `📞 Called${duration}`;
+        } else if (entry.action === 'updated') {
+            return '✏️ Updated';
+        }
+        return entry.action;
+    };
+
+    const getLastCallInfo = () => {
+        if (!lead || !lead.auditTrail) return null;
+        const lastCall = lead.auditTrail.slice().reverse().find(entry => entry.action === 'called');
+        return lastCall;
+    };
+
     return (
         <div className="modal-overlay" onClick={onCancel}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
                     <h2>{lead ? 'Edit Lead' : 'Add New Lead'}</h2>
-                    <button className="modal-close" onClick={onCancel}>×</button>
+                    <div className="header-actions">
+                        <button type="button" className="btn btn-secondary-header" onClick={onCancel}>
+                            Cancel
+                        </button>
+                        <button type="submit" className="btn btn-primary-header" onClick={handleSubmit}>
+                            {lead ? 'Update' : 'Create'}
+                        </button>
+                        <button className="modal-close" onClick={onCancel}>×</button>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="lead-form">
@@ -181,6 +248,27 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                                 placeholder="Set callback reminder"
                             />
                         </div>
+
+                        <div className="form-group">
+                            <label>Assigned To</label>
+                            <select
+                                name="assignedTo"
+                                value={formData.assignedTo}
+                                onChange={handleChange}
+                                disabled={loadingUsers}
+                            >
+                                <option value="">Unassigned</option>
+                                {loadingUsers ? (
+                                    <option>Loading...</option>
+                                ) : (
+                                    users.map(user => (
+                                        <option key={user.id} value={user.id}>
+                                            {user.name || user.email}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
                     </div>
 
                     <div className="form-group full-width">
@@ -189,10 +277,65 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                             name="notes"
                             value={formData.notes}
                             onChange={handleChange}
-                            rows="4"
+                            rows="8"
                             placeholder="Add any additional notes or comments..."
                         />
                     </div>
+
+                    {lead && getLastCallInfo() && (
+                        <div className="last-call-section">
+                            <h3>Last Call</h3>
+                            <div className="last-call-info">
+                                <div className="last-call-main">
+                                    <span className="last-call-label">📞 Called by:</span>
+                                    <span className="last-call-user">{getLastCallInfo().userName}</span>
+                                    <span className="last-call-time">{formatDateTime(getLastCallInfo().timestamp)}</span>
+                                </div>
+                                {getLastCallInfo().duration > 0 && (
+                                    <div className="last-call-duration">
+                                        Duration: {formatDuration(getLastCallInfo().duration)}
+                                    </div>
+                                )}
+                                {getLastCallInfo().notes && (
+                                    <div className="last-call-notes">
+                                        <strong>Notes:</strong> {getLastCallInfo().notes}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {lead && lead.auditTrail && lead.auditTrail.length > 0 && (
+                        <div className="audit-trail-section">
+                            <h3>Recent Activity</h3>
+                            <div className="audit-entries">
+                                {lead.auditTrail.slice().reverse().map((entry, index) => (
+                                    <div key={index} className="audit-entry">
+                                        <div className="audit-main">
+                                            <span className="audit-action">{formatAuditAction(entry)}</span>
+                                            <span className="audit-user">{entry.userName}</span>
+                                            <span className="audit-time">{formatDateTime(entry.timestamp)}</span>
+                                        </div>
+                                        {entry.action === 'updated' && entry.changes && entry.changes.length > 0 && (
+                                            <div className="audit-changes">
+                                                {entry.changes.map((change, i) => (
+                                                    <div key={i} className="audit-change-item">
+                                                        <span className="change-field">{change.field}:</span>
+                                                        <span className="change-values">
+                                                            {formatFieldValue(change.oldValue)} → {formatFieldValue(change.newValue)}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {entry.action === 'called' && entry.notes && (
+                                            <div className="audit-notes">{entry.notes}</div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="form-actions">
                         <button type="button" className="btn btn-secondary" onClick={onCancel}>

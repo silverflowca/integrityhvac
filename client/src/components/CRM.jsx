@@ -28,6 +28,7 @@ function CRM() {
     const [activeCall, setActiveCall] = useState(null);
     const [showSipSettings, setShowSipSettings] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [users, setUsers] = useState([]);
     const [filters, setFilters] = useState({
         status: 'all',
         priority: 'all',
@@ -35,9 +36,10 @@ function CRM() {
         groupBy: 'none'
     });
 
-    // Fetch leads on mount
+    // Fetch leads and users on mount
     useEffect(() => {
         fetchLeads();
+        fetchUsers();
     }, []);
 
     // Filter, sort, and group leads when filters or search term changes
@@ -103,7 +105,17 @@ function CRM() {
         const grouped = {};
 
         leadsToGroup.forEach(lead => {
-            const key = groupBy === 'status' ? (lead.status || 'new') : (lead.priority || 'cold');
+            let key;
+            if (groupBy === 'status') {
+                key = lead.status || 'new';
+            } else if (groupBy === 'priority') {
+                key = lead.priority || 'cold';
+            } else if (groupBy === 'assignedTo') {
+                key = lead.assignedTo || 'unassigned';
+            } else {
+                key = 'other';
+            }
+
             if (!grouped[key]) {
                 grouped[key] = [];
             }
@@ -111,6 +123,17 @@ function CRM() {
         });
 
         return grouped;
+    };
+
+    const getGroupDisplayName = (groupKey, groupBy) => {
+        if (groupBy === 'assignedTo') {
+            if (groupKey === 'unassigned') {
+                return 'Unassigned';
+            }
+            const user = users.find(u => u.id === groupKey);
+            return user ? (user.name || user.email) : groupKey;
+        }
+        return groupKey;
     };
 
     const fetchLeads = async () => {
@@ -124,6 +147,15 @@ function CRM() {
             setError('Failed to load leads. Please try again.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const response = await api.getUsers();
+            setUsers(response.users || []);
+        } catch (err) {
+            console.error('Error fetching users:', err);
         }
     };
 
@@ -251,7 +283,7 @@ function CRM() {
                                     fontWeight: '700',
                                     color: 'var(--text-primary)'
                                 }}>
-                                    {groupName} ({groupLeads.length})
+                                    {getGroupDisplayName(groupName, filters.groupBy)} ({groupLeads.length})
                                 </h3>
                                 <LeadListView
                                     leads={groupLeads}
@@ -300,7 +332,7 @@ function CRM() {
                                     fontWeight: '700',
                                     color: 'var(--text-primary)'
                                 }}>
-                                    {groupName} ({groupLeads.length})
+                                    {getGroupDisplayName(groupName, filters.groupBy)} ({groupLeads.length})
                                 </h3>
                                 <LeadList
                                     leads={groupLeads}

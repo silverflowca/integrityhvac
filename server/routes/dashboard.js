@@ -297,24 +297,44 @@ router.post('/activity', (req, res) => {
         activities.push(newActivity);
         writeActivities(activities);
 
-        // If this is a call activity with notes and a leadId, append notes to the lead
-        if (type === 'call' && notes && notes.trim() && leadId) {
+        // If this is a call activity with a leadId, update the lead's notes and audit trail
+        if (type === 'call' && leadId) {
             const leads = readLeads();
             const leadIndex = leads.findIndex(l => l.id === leadId);
 
             if (leadIndex !== -1) {
-                const timestamp = new Date().toLocaleString();
-                const callNote = `[Call - ${timestamp}] ${notes.trim()}`;
+                const lead = leads[leadIndex];
 
-                // Append to existing notes or create new notes field
-                if (leads[leadIndex].notes && leads[leadIndex].notes.trim()) {
-                    leads[leadIndex].notes = leads[leadIndex].notes.trim() + '\n\n' + callNote;
-                } else {
-                    leads[leadIndex].notes = callNote;
+                // Initialize audit trail if it doesn't exist
+                if (!lead.auditTrail) {
+                    lead.auditTrail = [];
                 }
 
+                // Add audit trail entry for the call
+                lead.auditTrail.push({
+                    timestamp: new Date().toISOString(),
+                    userId: req.user.id,
+                    userName: req.user.name || req.user.email,
+                    action: 'called',
+                    duration,
+                    notes: notes?.trim() || ''
+                });
+
+                // If there are notes, also append them to the notes field
+                if (notes && notes.trim()) {
+                    const timestamp = new Date().toLocaleString();
+                    const callNote = `[Call - ${timestamp}] ${notes.trim()}`;
+
+                    if (lead.notes && lead.notes.trim()) {
+                        lead.notes = lead.notes.trim() + '\n\n' + callNote;
+                    } else {
+                        lead.notes = callNote;
+                    }
+                }
+
+                leads[leadIndex] = lead;
                 writeLeads(leads);
-                console.log(`Call notes appended to lead ${leadId}`);
+                console.log(`Call activity added to audit trail for lead ${leadId}`);
             }
         }
 

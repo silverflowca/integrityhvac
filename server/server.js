@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import dashboardRoutes from './routes/dashboard.js';
 import statusRoutes from './routes/statuses.js';
+import userRoutes from './routes/users.js';
 import { authenticateToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -77,6 +78,9 @@ app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 // Status routes (protected)
 app.use('/api/statuses', authenticateToken, statusRoutes);
 
+// User routes (protected)
+app.use('/api/users', authenticateToken, userRoutes);
+
 // Health check (public)
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Integrity HVAC CRM API is running' });
@@ -139,9 +143,42 @@ app.put('/api/leads/:id', authenticateToken, (req, res) => {
         const index = leads.findIndex(l => l.id === req.params.id);
 
         if (index !== -1) {
+            const oldLead = leads[index];
+            const newData = req.body;
+
+            // Initialize audit trail if it doesn't exist
+            if (!oldLead.auditTrail) {
+                oldLead.auditTrail = [];
+            }
+
+            // Track changes
+            const changes = [];
+            const fieldsToTrack = ['status', 'priority', 'assignedTo', 'company', 'name', 'phone', 'email', 'location', 'callbackDate'];
+
+            fieldsToTrack.forEach(field => {
+                if (newData[field] !== undefined && newData[field] !== oldLead[field]) {
+                    changes.push({
+                        field,
+                        oldValue: oldLead[field] || '',
+                        newValue: newData[field] || ''
+                    });
+                }
+            });
+
+            // Add audit entry if there are changes
+            if (changes.length > 0) {
+                oldLead.auditTrail.push({
+                    timestamp: new Date().toISOString(),
+                    userId: req.user.id,
+                    userName: req.user.name || req.user.email,
+                    action: 'updated',
+                    changes
+                });
+            }
+
             leads[index] = {
-                ...leads[index],
-                ...req.body,
+                ...oldLead,
+                ...newData,
                 updatedAt: new Date().toISOString()
             };
 

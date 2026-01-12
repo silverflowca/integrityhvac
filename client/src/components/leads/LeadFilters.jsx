@@ -78,6 +78,7 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                         <option value="none">No Grouping</option>
                         <option value="status">Status</option>
                         <option value="priority">Priority</option>
+                        <option value="assignedTo">Sales Rep</option>
                     </select>
                 </div>
 

@@ -195,17 +195,23 @@ function IndividualDashboard() {
                 <div className="chart-card">
                     <h3>Leads by Priority</h3>
                     <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={priorityData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="value" fill="#3b82f6">
+                        <PieChart>
+                            <Pie
+                                data={priorityData}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, value }) => `${name}: ${value}`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                            >
                                 {priorityData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                 ))}
-                            </Bar>
-                        </BarChart>
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
                     </ResponsiveContainer>
                 </div>
             </div>

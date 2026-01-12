@@ -164,6 +164,11 @@ class ApiService {
             method: 'POST'
         });
     }
+
+    // User endpoints
+    async getUsers() {
+        return this.request('/users');
+    }
 }
 
 export default new ApiService();

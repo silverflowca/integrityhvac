@@ -130,7 +130,7 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
 
             {lead.notes && (
                 <div className="lead-notes">
-                    <strong>Notes:</strong> {lead.notes}
+                    <strong>Latest Note:</strong> {lead.notes.split('\n\n').slice(-1)[0]}
                 </div>
             )}
 
