@@ -53,10 +53,15 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
             setStatuses([
                 { id: '1', name: 'New', isDefault: true },
                 { id: '2', name: 'Contacted', isDefault: true },
-                { id: '3', name: 'Qualified', isDefault: true },
-                { id: '4', name: 'Quoted', isDefault: true },
-                { id: '5', name: 'Won', isDefault: true },
-                { id: '6', name: 'Lost', isDefault: true }
+                { id: '3', name: 'No answer', isDefault: true },
+                { id: '4', name: 'Phone number not in service', isDefault: true },
+                { id: '5', name: 'Qualified', isDefault: true },
+                { id: '6', name: 'Quoted', isDefault: true },
+                { id: '7', name: 'Cleaning Lead', isDefault: true },
+                { id: '8', name: 'Won', isDefault: true },
+                { id: '9', name: 'Lost', isDefault: true },
+                { id: '10', name: 'Do Not Call', isDefault: true },
+                { id: '11', name: 'Call Back', isDefault: true }
             ]);
         } finally {
             setLoadingStatuses(false);

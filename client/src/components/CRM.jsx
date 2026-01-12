@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './layout/Sidebar';
 import Topbar from './layout/Topbar';
-import LeadList from './leads/LeadList';
 import LeadListView from './leads/LeadListView';
-import LeadMapView from './leads/LeadMapView';
 import LeadFilters from './leads/LeadFilters';
 import LeadForm from './leads/LeadForm';
 import PhoneCall from './common/PhoneCall';
@@ -19,7 +17,7 @@ function CRM() {
     const [leads, setLeads] = useState([]);
     const [filteredLeads, setFilteredLeads] = useState([]);
     const [activeView, setActiveView] = useState('leads');
-    const [viewMode, setViewMode] = useState('card');
+    const [viewMode] = useState('list'); // Permanently set to list view
     const [searchTerm, setSearchTerm] = useState('');
     const [showForm, setShowForm] = useState(false);
     const [editingLead, setEditingLead] = useState(null);
@@ -258,48 +256,10 @@ function CRM() {
     const renderLeadsView = () => {
         const groupedLeads = groupLeads(filteredLeads, filters.groupBy);
 
-        if (viewMode === 'list') {
-            if (filters.groupBy === 'none') {
-                return (
-                    <LeadListView
-                        leads={filteredLeads}
-                        onEditLead={handleEditLead}
-                        onDeleteLead={handleDeleteLead}
-                        onUpdateStatus={handleUpdateStatus}
-                        onCall={handleCall}
-                    />
-                );
-            } else {
-                return (
-                    <div>
-                        {Object.entries(groupedLeads).map(([groupName, groupLeads]) => (
-                            <div key={groupName} style={{ marginBottom: '24px' }}>
-                                <h3 style={{
-                                    padding: '12px 24px',
-                                    background: 'var(--bg-secondary)',
-                                    borderBottom: '2px solid var(--border-color)',
-                                    textTransform: 'capitalize',
-                                    fontSize: '16px',
-                                    fontWeight: '700',
-                                    color: 'var(--text-primary)'
-                                }}>
-                                    {getGroupDisplayName(groupName, filters.groupBy)} ({groupLeads.length})
-                                </h3>
-                                <LeadListView
-                                    leads={groupLeads}
-                                    onEditLead={handleEditLead}
-                                    onDeleteLead={handleDeleteLead}
-                                    onUpdateStatus={handleUpdateStatus}
-                                    onCall={handleCall}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                );
-            }
-        } else if (viewMode === 'map') {
+        // Always use list view
+        if (filters.groupBy === 'none') {
             return (
-                <LeadMapView
+                <LeadListView
                     leads={filteredLeads}
                     onEditLead={handleEditLead}
                     onDeleteLead={handleDeleteLead}
@@ -308,44 +268,32 @@ function CRM() {
                 />
             );
         } else {
-            if (filters.groupBy === 'none') {
-                return (
-                    <LeadList
-                        leads={filteredLeads}
-                        onEditLead={handleEditLead}
-                        onDeleteLead={handleDeleteLead}
-                        onUpdateStatus={handleUpdateStatus}
-                        onCall={handleCall}
-                    />
-                );
-            } else {
-                return (
-                    <div>
-                        {Object.entries(groupedLeads).map(([groupName, groupLeads]) => (
-                            <div key={groupName} style={{ marginBottom: '24px' }}>
-                                <h3 style={{
-                                    padding: '12px 24px',
-                                    background: 'var(--bg-secondary)',
-                                    borderBottom: '2px solid var(--border-color)',
-                                    textTransform: 'capitalize',
-                                    fontSize: '16px',
-                                    fontWeight: '700',
-                                    color: 'var(--text-primary)'
-                                }}>
-                                    {getGroupDisplayName(groupName, filters.groupBy)} ({groupLeads.length})
-                                </h3>
-                                <LeadList
-                                    leads={groupLeads}
-                                    onEditLead={handleEditLead}
-                                    onDeleteLead={handleDeleteLead}
-                                    onUpdateStatus={handleUpdateStatus}
-                                    onCall={handleCall}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                );
-            }
+            return (
+                <div>
+                    {Object.entries(groupedLeads).map(([groupName, groupLeads]) => (
+                        <div key={groupName} style={{ marginBottom: '24px' }}>
+                            <h3 style={{
+                                padding: '12px 24px',
+                                background: 'var(--bg-secondary)',
+                                borderBottom: '2px solid var(--border-color)',
+                                textTransform: 'capitalize',
+                                fontSize: '16px',
+                                fontWeight: '700',
+                                color: 'var(--text-primary)'
+                            }}>
+                                {getGroupDisplayName(groupName, filters.groupBy)} ({groupLeads.length})
+                            </h3>
+                            <LeadListView
+                                leads={groupLeads}
+                                onEditLead={handleEditLead}
+                                onDeleteLead={handleDeleteLead}
+                                onUpdateStatus={handleUpdateStatus}
+                                onCall={handleCall}
+                            />
+                        </div>
+                    ))}
+                </div>
+            );
         }
     };
 
@@ -410,20 +358,16 @@ function CRM() {
                             searchTerm={searchTerm}
                             onSearchChange={setSearchTerm}
                             onOpenSettings={() => setShowSipSettings(true)}
-                            viewMode={viewMode}
-                            onViewModeChange={setViewMode}
                             onToggleMobileMenu={toggleMobileMenu}
                         />
 
-                        {(viewMode === 'card' || viewMode === 'list') && (
-                            <LeadFilters
-                                filters={filters}
-                                onFilterChange={handleFilterChange}
-                                onSortChange={handleSortChange}
-                                onGroupChange={handleGroupChange}
-                                leadCount={filteredLeads.length}
-                            />
-                        )}
+                        <LeadFilters
+                            filters={filters}
+                            onFilterChange={handleFilterChange}
+                            onSortChange={handleSortChange}
+                            onGroupChange={handleGroupChange}
+                            leadCount={filteredLeads.length}
+                        />
 
                         <div className="content-area">
                             {loading ? (

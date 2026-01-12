@@ -4,10 +4,15 @@ import './LeadListView.css';
 const STATUS_COLORS = {
     new: '#0ea5e9',
     contacted: '#06b6d4',
+    no_answer: '#94a3b8',
+    phone_number_not_in_service: '#64748b',
     qualified: '#8b5cf6',
     quoted: '#f59e0b',
+    cleaning_lead: '#14b8a6',
     won: '#10b981',
-    lost: '#ef4444'
+    lost: '#ef4444',
+    do_not_call: '#dc2626',
+    call_back: '#3b82f6'
 };
 
 const PRIORITY_COLORS = {
@@ -226,10 +231,15 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall 
                                 >
                                     <option value="new">New</option>
                                     <option value="contacted">Contacted</option>
+                                    <option value="no_answer">No answer</option>
+                                    <option value="phone_number_not_in_service">Phone number not in service</option>
                                     <option value="qualified">Qualified</option>
                                     <option value="quoted">Quoted</option>
+                                    <option value="cleaning_lead">Cleaning Lead</option>
                                     <option value="won">Won</option>
                                     <option value="lost">Lost</option>
+                                    <option value="do_not_call">Do Not Call</option>
+                                    <option value="call_back">Call Back</option>
                                 </select>
                             </td>
                             <td>{formatDate(lead.createdAt)}</td>

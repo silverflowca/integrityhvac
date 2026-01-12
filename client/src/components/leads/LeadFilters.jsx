@@ -31,10 +31,15 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                         <option value="all">All Statuses</option>
                         <option value="new">New</option>
                         <option value="contacted">Contacted</option>
+                        <option value="no_answer">No answer</option>
+                        <option value="phone_number_not_in_service">Phone number not in service</option>
                         <option value="qualified">Qualified</option>
                         <option value="quoted">Quoted</option>
+                        <option value="cleaning_lead">Cleaning Lead</option>
                         <option value="won">Won</option>
                         <option value="lost">Lost</option>
+                        <option value="do_not_call">Do Not Call</option>
+                        <option value="call_back">Call Back</option>
                     </select>
                 </div>
 

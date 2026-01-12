@@ -32477,10 +32477,51 @@
     "phone": "(902) 893-7147",
     "email": "",
     "location": "Truro NS",
-    "status": "new",
+    "status": "contacted",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.341Z",
-    "updatedAt": "2026-01-12T21:02:36.342Z"
+    "updatedAt": "2026-01-12T21:24:23.670Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-12T21:23:23.446Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "contacted"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-12T21:23:39.266Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "contacted",
+            "newValue": "new"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-12T21:24:23.670Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "contacted"
+          }
+        ]
+      }
+    ]
   }
 ]
