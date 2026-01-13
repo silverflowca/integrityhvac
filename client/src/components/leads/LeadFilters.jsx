@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import './LeadFilters.css';
 
 const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, leadCount }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [statuses, setStatuses] = useState([]);
+
+    useEffect(() => {
+        fetchStatuses();
+    }, []);
+
+    const fetchStatuses = async () => {
+        try {
+            const response = await api.getStatuses();
+            setStatuses(response.statuses || []);
+        } catch (error) {
+            console.error('Error fetching statuses:', error);
+        }
+    };
 
     const hasActiveFilters = filters.status !== 'all' || filters.priority !== 'all';
 
@@ -29,17 +44,14 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                         onChange={(e) => onFilterChange('status', e.target.value)}
                     >
                         <option value="all">All Statuses</option>
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="no_answer">No answer</option>
-                        <option value="phone_number_not_in_service">Phone number not in service</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="quoted">Quoted</option>
-                        <option value="cleaning_lead">Cleaning Lead</option>
-                        <option value="won">Won</option>
-                        <option value="lost">Lost</option>
-                        <option value="do_not_call">Do Not Call</option>
-                        <option value="call_back">Call Back</option>
+                        {statuses.map(status => (
+                            <option
+                                key={status.id}
+                                value={status.name.toLowerCase().replace(/\s+/g, '_')}
+                            >
+                                {status.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
 

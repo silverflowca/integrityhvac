@@ -9,6 +9,8 @@ const Settings = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [draggedIndex, setDraggedIndex] = useState(null);
+    const [dragOverIndex, setDragOverIndex] = useState(null);
 
     useEffect(() => {
         fetchStatuses();
@@ -90,6 +92,63 @@ const Settings = () => {
         }
     };
 
+    const handleDragStart = (index) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragOver = (e, index) => {
+        e.preventDefault();
+        setDragOverIndex(index);
+    };
+
+    const handleDragLeave = () => {
+        setDragOverIndex(null);
+    };
+
+    const handleDrop = async (e, dropIndex) => {
+        e.preventDefault();
+
+        if (draggedIndex === null || draggedIndex === dropIndex) {
+            setDraggedIndex(null);
+            setDragOverIndex(null);
+            return;
+        }
+
+        const newStatuses = [...statuses];
+        const draggedItem = newStatuses[draggedIndex];
+
+        // Remove from old position
+        newStatuses.splice(draggedIndex, 1);
+
+        // Insert at new position
+        newStatuses.splice(dropIndex, 0, draggedItem);
+
+        setStatuses(newStatuses);
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+
+        // Save the new order to the backend
+        try {
+            setSaving(true);
+            await api.reorderStatuses(newStatuses);
+            setSuccess('Status order updated');
+            setError(null);
+            setTimeout(() => setSuccess(null), 3000);
+        } catch (err) {
+            console.error('Error reordering statuses:', err);
+            setError('Failed to update status order');
+            // Revert on error
+            await fetchStatuses();
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
     if (loading) {
         return (
             <div className="settings-container">
@@ -146,22 +205,37 @@ const Settings = () => {
                     </form>
 
                     <div className="status-list">
-                        {statuses.map(status => (
-                            <div key={status.id} className="status-item">
-                                <span className="status-name">{status.name}</span>
-                                {!status.isDefault && (
-                                    <button
-                                        className="btn-delete"
-                                        onClick={() => handleDeleteStatus(status.id)}
-                                        disabled={saving}
-                                        title="Delete status"
-                                    >
-                                        ×
-                                    </button>
-                                )}
-                                {status.isDefault && (
-                                    <span className="default-badge">Default</span>
-                                )}
+                        <p className="drag-hint">💡 Drag and drop to reorder statuses</p>
+                        {statuses.map((status, index) => (
+                            <div
+                                key={status.id}
+                                className={`status-item ${draggedIndex === index ? 'dragging' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
+                                draggable
+                                onDragStart={() => handleDragStart(index)}
+                                onDragOver={(e) => handleDragOver(e, index)}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => handleDrop(e, index)}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <div className="status-item-content">
+                                    <span className="drag-handle" title="Drag to reorder">☰</span>
+                                    <span className="status-name">{status.name}</span>
+                                </div>
+                                <div className="status-item-actions">
+                                    {!status.isDefault && (
+                                        <button
+                                            className="btn-delete"
+                                            onClick={() => handleDeleteStatus(status.id)}
+                                            disabled={saving}
+                                            title="Delete status"
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                    {status.isDefault && (
+                                        <span className="default-badge">Default</span>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>

@@ -13,17 +13,17 @@ const STATUSES_FILE = path.join(DATA_DIR, 'statuses.json');
 
 // Default statuses
 const DEFAULT_STATUSES = [
-    { id: '1', name: 'New', isDefault: true },
-    { id: '2', name: 'Contacted', isDefault: true },
-    { id: '3', name: 'No answer', isDefault: true },
-    { id: '4', name: 'Phone number not in service', isDefault: true },
-    { id: '5', name: 'Qualified', isDefault: true },
-    { id: '6', name: 'Quoted', isDefault: true },
-    { id: '7', name: 'Cleaning Lead', isDefault: true },
-    { id: '8', name: 'Won', isDefault: true },
-    { id: '9', name: 'Lost', isDefault: true },
-    { id: '10', name: 'Do Not Call', isDefault: true },
-    { id: '11', name: 'Call Back', isDefault: true }
+    { id: '1', name: 'New', isDefault: true, order: 1 },
+    { id: '2', name: 'Contacted', isDefault: true, order: 2 },
+    { id: '3', name: 'No answer', isDefault: true, order: 3 },
+    { id: '4', name: 'Phone number not in service', isDefault: true, order: 4 },
+    { id: '5', name: 'Qualified', isDefault: true, order: 5 },
+    { id: '6', name: 'Quoted', isDefault: true, order: 6 },
+    { id: '7', name: 'Cleaning Lead', isDefault: true, order: 7 },
+    { id: '8', name: 'Won', isDefault: true, order: 8 },
+    { id: '9', name: 'Lost', isDefault: true, order: 9 },
+    { id: '10', name: 'Do Not Call', isDefault: true, order: 10 },
+    { id: '11', name: 'Call Back', isDefault: true, order: 11 }
 ];
 
 // Initialize statuses file with defaults if it doesn't exist
@@ -55,7 +55,9 @@ const writeStatuses = (statuses) => {
 router.get('/', (req, res) => {
     try {
         const statuses = readStatuses();
-        res.json({ success: true, statuses });
+        // Sort by order field
+        const sortedStatuses = statuses.sort((a, b) => (a.order || 0) - (b.order || 0));
+        res.json({ success: true, statuses: sortedStatuses });
     } catch (error) {
         console.error('Error getting statuses:', error);
         res.status(500).json({ success: false, error: 'Failed to get statuses' });
@@ -78,10 +80,14 @@ router.post('/', (req, res) => {
             return res.status(400).json({ success: false, error: 'Status already exists' });
         }
 
+        // Get the max order value
+        const maxOrder = statuses.reduce((max, s) => Math.max(max, s.order || 0), 0);
+
         const newStatus = {
             id: Date.now().toString(),
             name: name.trim(),
-            isDefault: false
+            isDefault: false,
+            order: maxOrder + 1
         };
 
         statuses.push(newStatus);
@@ -128,6 +134,29 @@ router.post('/reset', (req, res) => {
     } catch (error) {
         console.error('Error resetting statuses:', error);
         res.status(500).json({ success: false, error: 'Failed to reset statuses' });
+    }
+});
+
+// Update status order
+router.put('/reorder', (req, res) => {
+    try {
+        const { statuses: reorderedStatuses } = req.body;
+
+        if (!reorderedStatuses || !Array.isArray(reorderedStatuses)) {
+            return res.status(400).json({ success: false, error: 'Invalid statuses array' });
+        }
+
+        // Update order for each status
+        const updatedStatuses = reorderedStatuses.map((status, index) => ({
+            ...status,
+            order: index + 1
+        }));
+
+        writeStatuses(updatedStatuses);
+        res.json({ success: true, statuses: updatedStatuses });
+    } catch (error) {
+        console.error('Error reordering statuses:', error);
+        res.status(500).json({ success: false, error: 'Failed to reorder statuses' });
     }
 });
 

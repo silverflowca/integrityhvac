@@ -1,0 +1,86 @@
+[
+  {
+    "id": "1768264518842",
+    "name": "test",
+    "isDefault": false,
+    "order": 1
+  },
+  {
+    "id": "2",
+    "name": "Contacted",
+    "isDefault": true,
+    "order": 2
+  },
+  {
+    "id": "1",
+    "name": "New",
+    "isDefault": true,
+    "order": 3
+  },
+  {
+    "id": "4",
+    "name": "Phone number not in service",
+    "isDefault": true,
+    "order": 4
+  },
+  {
+    "id": "1768264533211",
+    "name": "tester",
+    "isDefault": false,
+    "order": 5
+  },
+  {
+    "id": "1768264539822",
+    "name": "testasdfasf",
+    "isDefault": false,
+    "order": 6
+  },
+  {
+    "id": "8",
+    "name": "Won",
+    "isDefault": true,
+    "order": 7
+  },
+  {
+    "id": "3",
+    "name": "No answer",
+    "isDefault": true,
+    "order": 8
+  },
+  {
+    "id": "5",
+    "name": "Qualified",
+    "isDefault": true,
+    "order": 9
+  },
+  {
+    "id": "10",
+    "name": "Do Not Call",
+    "isDefault": true,
+    "order": 10
+  },
+  {
+    "id": "6",
+    "name": "Quoted",
+    "isDefault": true,
+    "order": 11
+  },
+  {
+    "id": "7",
+    "name": "Cleaning Lead",
+    "isDefault": true,
+    "order": 12
+  },
+  {
+    "id": "9",
+    "name": "Lost",
+    "isDefault": true,
+    "order": 13
+  },
+  {
+    "id": "11",
+    "name": "Call Back",
+    "isDefault": true,
+    "order": 14
+  }
+]

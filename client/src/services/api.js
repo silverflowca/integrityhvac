@@ -165,6 +165,13 @@ class ApiService {
         });
     }
 
+    async reorderStatuses(statuses) {
+        return this.request('/statuses/reorder', {
+            method: 'PUT',
+            body: JSON.stringify({ statuses })
+        });
+    }
+
     // User endpoints
     async getUsers() {
         return this.request('/users');
