@@ -22,8 +22,11 @@ const isCloudEnvironment = process.env.RAILWAY_ENVIRONMENT ||
                           process.env.VERCEL ||
                           process.env.HEROKU_APP_NAME;
 
+// Debug: Log all environment variables in Railway
 if (isCloudEnvironment) {
     console.log(`📝 Running in cloud environment, using provided environment variables`);
+    console.log(`🔍 RAILWAY_ENVIRONMENT: ${process.env.RAILWAY_ENVIRONMENT}`);
+    console.log(`🔍 All env keys:`, Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('NODE_ENV') || k.includes('JWT')));
     console.log(`📍 NODE_ENV: ${process.env.NODE_ENV || 'not set'}`);
     console.log(`📍 SUPABASE_URL: ${process.env.SUPABASE_URL ? '✅ Set' : '❌ Missing'}`);
     console.log(`📍 SUPABASE_SERVICE_KEY: ${process.env.SUPABASE_SERVICE_KEY ? '✅ Set' : '❌ Missing'}`);
