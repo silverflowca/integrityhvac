@@ -14,5 +14,13 @@
     "name": "Damion Steen",
     "role": "user",
     "created_at": "2026-01-12T21:00:16.548Z"
+  },
+  {
+    "id": "1768301021791",
+    "email": "admin@silverflow.ca",
+    "password_hash": "$2b$10$fxIWxEmOHvZhz1ZfH7XFfuUxC2V8CkDGJeGgeL1oF5BINx46Jajdu",
+    "name": "Damion Steen",
+    "role": "user",
+    "created_at": "2026-01-13T10:43:41.791Z"
   }
 ]

@@ -1,13 +1,45 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import supabase from '../config/supabase.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
-/**
- * Register new user
- */
+// User storage (JSON file - simple like leads)
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+
+// Ensure users file exists
+if (!fs.existsSync(USERS_FILE)) {
+    fs.writeFileSync(USERS_FILE, JSON.stringify([]));
+}
+
+const readUsers = () => {
+    try {
+        const data = fs.readFileSync(USERS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error reading users:', error);
+        return [];
+    }
+};
+
+const writeUsers = (users) => {
+    try {
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+        return true;
+    } catch (error) {
+        console.error('Error writing users:', error);
+        return false;
+    }
+};
+
+// Register new user
 router.post('/register', async (req, res) => {
     try {
         const { email, password, name } = req.body;
@@ -16,16 +48,10 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Email and password required' });
         }
 
+        const users = readUsers();
+
         // Check if user already exists
-        const { data: existingUsers, error: checkError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', email)
-            .limit(1);
-
-        if (checkError) throw checkError;
-
-        if (existingUsers && existingUsers.length > 0) {
+        if (users.find(u => u.email === email)) {
             return res.status(400).json({ success: false, error: 'User already exists' });
         }
 
@@ -33,18 +59,17 @@ router.post('/register', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 10);
 
         // Create new user
-        const { data: newUser, error: insertError } = await supabase
-            .from('users')
-            .insert({
-                email,
-                password_hash: passwordHash,
-                name: name || email.split('@')[0],
-                role: 'user'
-            })
-            .select()
-            .single();
+        const newUser = {
+            id: Date.now().toString(),
+            email,
+            password_hash: passwordHash,
+            name: name || email.split('@')[0],
+            role: 'user',
+            created_at: new Date().toISOString()
+        };
 
-        if (insertError) throw insertError;
+        users.push(newUser);
+        writeUsers(users);
 
         // Generate token
         const token = generateToken(newUser);
@@ -63,9 +88,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-/**
- * Login
- */
+// Login
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -74,20 +97,12 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Email and password required' });
         }
 
-        // Find user by email
-        const { data: users, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .limit(1);
+        const users = readUsers();
+        const user = users.find(u => u.email === email);
 
-        if (error) throw error;
-
-        if (!users || users.length === 0) {
+        if (!user) {
             return res.status(401).json({ success: false, error: 'Invalid credentials' });
         }
-
-        const user = users[0];
 
         // Verify password
         const validPassword = await bcrypt.compare(password, user.password_hash);
@@ -113,27 +128,21 @@ router.post('/login', async (req, res) => {
     }
 });
 
-/**
- * Get current user (protected route)
- */
-router.get('/me', authenticateToken, async (req, res) => {
+// Get current user (protected route)
+router.get('/me', authenticateToken, (req, res) => {
     try {
-        const { data: user, error } = await supabase
-            .from('users')
-            .select('id, email, name, role, created_at, updated_at')
-            .eq('id', req.user.id)
-            .single();
+        const users = readUsers();
+        const user = users.find(u => u.id === req.user.id);
 
-        if (error) {
-            if (error.code === 'PGRST116') {
-                return res.status(404).json({ success: false, error: 'User not found' });
-            }
-            throw error;
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
         }
+
+        const { password_hash, ...userWithoutPassword } = user;
 
         res.json({
             success: true,
-            user
+            user: userWithoutPassword
         });
     } catch (error) {
         console.error('Get user error:', error);
@@ -141,9 +150,7 @@ router.get('/me', authenticateToken, async (req, res) => {
     }
 });
 
-/**
- * Logout (client-side token removal)
- */
+// Logout (client-side token removal, but we'll keep the endpoint)
 router.post('/logout', authenticateToken, (req, res) => {
     res.json({ success: true, message: 'Logged out successfully' });
 });

@@ -1,0 +1,39 @@
+{
+  "name": "integrityhvac-crm",
+  "version": "1.0.0",
+  "description": "IntegrityHVAC CRM with Supabase",
+  "type": "module",
+  "scripts": {
+    "supabase:start": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:status": "npx supabase status",
+    "supabase:studio": "npx supabase start && echo \"Opening Studio at http://localhost:54323\"",
+    "supabase:reset": "npx supabase db reset",
+    "supabase:migrate": "node supabase/migrate-data.js",
+    "supabase:link": "npx supabase link",
+    "supabase:push": "npx supabase db push",
+    "db:setup": "npm run supabase:start && timeout /t 5 /nobreak && npm run supabase:migrate",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "dev": "npm run dev:server & npm run dev:client",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "cloud:staging:push": "npx supabase link --project-ref $STAGING_PROJECT_REF && npx supabase db push",
+    "cloud:production:push": "npx supabase link --project-ref $PRODUCTION_PROJECT_REF && npx supabase db push"
+  },
+  "keywords": [
+    "crm",
+    "hvac",
+    "supabase",
+    "react",
+    "express"
+  ],
+  "author": "Silverflow",
+  "license": "ISC",
+  "devDependencies": {
+    "supabase": "^1.225.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.14",
+    "bcryptjs": "^2.4.3"
+  }
+}

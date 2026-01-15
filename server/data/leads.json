@@ -289,11 +289,26 @@
     "phone": "(902) 893-9694",
     "email": "",
     "location": "417 Lwr Truro Truro NS",
-    "status": "new",
+    "status": "test",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:01:19.272Z",
-    "updatedAt": "2026-01-12T21:01:19.272Z"
+    "updatedAt": "2026-01-13T08:44:19.560Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:44:19.560Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "test"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "1768251679290",
@@ -302,11 +317,39 @@
     "phone": "(902) 897-4435",
     "email": "",
     "location": "1601 Truro Truro NS",
-    "status": "new",
+    "status": "won",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:01:19.290Z",
-    "updatedAt": "2026-01-12T21:01:19.290Z"
+    "updatedAt": "2026-01-13T11:43:03.492Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:48:39.816Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "testasdfasf"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:43:03.492Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "testasdfasf",
+            "newValue": "won"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "1768251679306",
@@ -31140,11 +31183,26 @@
     "phone": "(902) 897-0585",
     "email": "",
     "location": "1 Mount Pleasant Truro NS B2N 3N6",
-    "status": "new",
+    "status": "call_back",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:32.987Z",
-    "updatedAt": "2026-01-12T21:02:32.987Z"
+    "updatedAt": "2026-01-13T11:41:40.952Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T11:41:40.951Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "call_back"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "1768251753018",
@@ -31183,7 +31241,29 @@
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.084Z",
-    "updatedAt": "2026-01-12T21:02:33.084Z"
+    "updatedAt": "2026-01-13T08:50:54.636Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:50:54.636Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "assignedTo",
+            "oldValue": "",
+            "newValue": ""
+          },
+          {
+            "field": "callbackDate",
+            "oldValue": "",
+            "newValue": ""
+          }
+        ]
+      }
+    ],
+    "callbackDate": "",
+    "assignedTo": ""
   },
   {
     "id": "1768251753119",
@@ -31192,11 +31272,46 @@
     "phone": "(902) 843-0343",
     "email": "",
     "location": "Truro NS B2N 4X4",
-    "status": "new",
+    "status": "tester",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.119Z",
-    "updatedAt": "2026-01-12T21:02:33.119Z"
+    "updatedAt": "2026-01-13T08:50:27.840Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:50:00.244Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "tester"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T08:50:27.840Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "assignedTo",
+            "oldValue": "",
+            "newValue": ""
+          },
+          {
+            "field": "callbackDate",
+            "oldValue": "",
+            "newValue": ""
+          }
+        ]
+      }
+    ],
+    "callbackDate": "",
+    "assignedTo": ""
   },
   {
     "id": "1768251753156",
@@ -31482,7 +31597,35 @@
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.847Z",
-    "updatedAt": "2026-01-12T21:02:33.847Z"
+    "updatedAt": "2026-01-13T11:42:17.644Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:48:13.385Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "won"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:17.644Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "won",
+            "newValue": "new"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "1768251753881",
@@ -31495,7 +31638,35 @@
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.881Z",
-    "updatedAt": "2026-01-12T21:02:33.881Z"
+    "updatedAt": "2026-01-13T11:42:29.209Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:48:00.912Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "contacted"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:29.209Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "contacted",
+            "newValue": "new"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "1768251753914",
@@ -31508,7 +31679,35 @@
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.914Z",
-    "updatedAt": "2026-01-12T21:02:33.914Z"
+    "updatedAt": "2026-01-13T11:42:52.239Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T11:41:27.178Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "qualified"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:52.239Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "qualified",
+            "newValue": "new"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "1768251753945",
@@ -31521,7 +31720,29 @@
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.945Z",
-    "updatedAt": "2026-01-12T21:02:33.945Z"
+    "updatedAt": "2026-01-13T08:48:20.259Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T08:48:20.258Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "assignedTo",
+            "oldValue": "",
+            "newValue": ""
+          },
+          {
+            "field": "callbackDate",
+            "oldValue": "",
+            "newValue": ""
+          }
+        ]
+      }
+    ],
+    "callbackDate": "",
+    "assignedTo": ""
   },
   {
     "id": "1768251753974",
@@ -31534,7 +31755,55 @@
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:33.974Z",
-    "updatedAt": "2026-01-12T21:02:33.974Z"
+    "updatedAt": "2026-01-13T11:47:44.037Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T10:44:08.418Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "new",
+            "newValue": "won"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:58.895Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "won",
+            "newValue": "new"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:47:44.037Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "assignedTo",
+            "oldValue": "",
+            "newValue": ""
+          },
+          {
+            "field": "callbackDate",
+            "oldValue": "",
+            "newValue": ""
+          }
+        ]
+      }
+    ],
+    "callbackDate": "",
+    "assignedTo": ""
   },
   {
     "id": "1768251754002",
@@ -32442,11 +32711,11 @@
     "phone": "(902) 897-2375",
     "email": "",
     "location": "Truro NS",
-    "status": "won",
+    "status": "new",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.190Z",
-    "updatedAt": "2026-01-13T00:27:15.408Z",
+    "updatedAt": "2026-01-13T11:41:45.866Z",
     "auditTrail": [
       {
         "timestamp": "2026-01-13T00:27:15.408Z",
@@ -32460,6 +32729,32 @@
             "newValue": "won"
           }
         ]
+      },
+      {
+        "timestamp": "2026-01-13T03:05:02.630Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "won",
+            "newValue": "call_back"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:41:45.866Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "call_back",
+            "newValue": "new"
+          }
+        ]
       }
     ]
   },
@@ -32470,11 +32765,11 @@
     "phone": "(902) 895-7358",
     "email": "",
     "location": "Truro NS",
-    "status": "cleaning_lead",
+    "status": "new",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.225Z",
-    "updatedAt": "2026-01-13T00:27:13.216Z",
+    "updatedAt": "2026-01-13T11:41:52.365Z",
     "auditTrail": [
       {
         "timestamp": "2026-01-13T00:27:13.216Z",
@@ -32488,6 +32783,19 @@
             "newValue": "cleaning_lead"
           }
         ]
+      },
+      {
+        "timestamp": "2026-01-13T11:41:52.365Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "cleaning_lead",
+            "newValue": "new"
+          }
+        ]
       }
     ]
   },
@@ -32498,11 +32806,11 @@
     "phone": "(902) 895-1964",
     "email": "",
     "location": "Truro NS",
-    "status": "won",
+    "status": "new",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.254Z",
-    "updatedAt": "2026-01-13T00:27:11.589Z",
+    "updatedAt": "2026-01-13T11:41:59.566Z",
     "auditTrail": [
       {
         "timestamp": "2026-01-13T00:27:10.029Z",
@@ -32529,6 +32837,19 @@
             "newValue": "won"
           }
         ]
+      },
+      {
+        "timestamp": "2026-01-13T11:41:59.566Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "won",
+            "newValue": "new"
+          }
+        ]
       }
     ]
   },
@@ -32539,11 +32860,11 @@
     "phone": "(902) 895-2906",
     "email": "",
     "location": "Truro NS",
-    "status": "phone_number_not_in_service",
+    "status": "new",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.282Z",
-    "updatedAt": "2026-01-13T00:27:08.308Z",
+    "updatedAt": "2026-01-13T11:42:05.977Z",
     "auditTrail": [
       {
         "timestamp": "2026-01-13T00:27:08.308Z",
@@ -32557,6 +32878,19 @@
             "newValue": "phone_number_not_in_service"
           }
         ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:05.977Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "phone_number_not_in_service",
+            "newValue": "new"
+          }
+        ]
       }
     ]
   },
@@ -32567,11 +32901,11 @@
     "phone": "(902) 897-4508",
     "email": "",
     "location": "Truro NS",
-    "status": "testasdfasf",
+    "status": "new",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.309Z",
-    "updatedAt": "2026-01-13T00:36:00.220Z",
+    "updatedAt": "2026-01-13T11:42:10.416Z",
     "auditTrail": [
       {
         "timestamp": "2026-01-13T00:27:05.347Z",
@@ -32611,6 +32945,32 @@
             "newValue": "testasdfasf"
           }
         ]
+      },
+      {
+        "timestamp": "2026-01-13T02:26:50.782Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "testasdfasf",
+            "newValue": "phone_number_not_in_service"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:10.416Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "phone_number_not_in_service",
+            "newValue": "new"
+          }
+        ]
       }
     ]
   },
@@ -32621,11 +32981,11 @@
     "phone": "(902) 893-7147",
     "email": "",
     "location": "Truro NS",
-    "status": "testasdfasf",
+    "status": "new",
     "priority": "warm",
     "notes": "Imported from CSV",
     "createdAt": "2026-01-12T21:02:36.341Z",
-    "updatedAt": "2026-01-13T00:35:56.743Z",
+    "updatedAt": "2026-01-13T11:42:36.502Z",
     "auditTrail": [
       {
         "timestamp": "2026-01-12T21:23:23.446Z",
@@ -32743,6 +33103,32 @@
             "newValue": "testasdfasf"
           }
         ]
+      },
+      {
+        "timestamp": "2026-01-13T02:26:48.282Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "testasdfasf",
+            "newValue": "tester"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:36.502Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "tester",
+            "newValue": "new"
+          }
+        ]
       }
     ]
   },
@@ -32753,12 +33139,98 @@
     "phone": "7823772906",
     "email": "",
     "location": "homedd",
-    "status": "phone_number_not_in_service",
+    "status": "new",
     "priority": "warm",
-    "notes": "test",
+    "notes": "test\n\n[Call - 1/12/2026, 11:04:08 PM] Called 7823772906\n\n[Call - 1/13/2026, 4:43:13 AM] test working\n\nasfsadf\n\n[Call - 1/14/2026, 8:42:20 AM] Called 7823772906\n\n[Call - 1/14/2026, 8:42:48 AM] Called 7823772906",
     "callbackDate": "",
     "assignedTo": "",
     "createdAt": "2026-01-13T00:36:57.656Z",
-    "updatedAt": "2026-01-13T00:36:57.656Z"
+    "updatedAt": "2026-01-13T11:42:55.288Z",
+    "auditTrail": [
+      {
+        "timestamp": "2026-01-13T03:04:08.872Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "called",
+        "duration": 3,
+        "notes": "Called 7823772906"
+      },
+      {
+        "timestamp": "2026-01-13T08:43:13.694Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "called",
+        "duration": 15,
+        "notes": "test working"
+      },
+      {
+        "timestamp": "2026-01-13T08:43:38.469Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "phone_number_not_in_service",
+            "newValue": "qualified"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T08:43:59.834Z",
+        "userId": "1768251616548",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "qualified",
+            "newValue": "testasdfasf"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:41:22.020Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "testasdfasf",
+            "newValue": "won"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-13T11:42:55.288Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "updated",
+        "changes": [
+          {
+            "field": "status",
+            "oldValue": "won",
+            "newValue": "new"
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-01-14T12:42:20.804Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "called",
+        "duration": 20,
+        "notes": "Called 7823772906"
+      },
+      {
+        "timestamp": "2026-01-14T12:42:48.655Z",
+        "userId": "1768301021791",
+        "userName": "Damion Steen",
+        "action": "called",
+        "duration": 5,
+        "notes": "Called 7823772906"
+      }
+    ]
   }
 ]

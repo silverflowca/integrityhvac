@@ -43,6 +43,66 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
         const ua = new JsSIP.UA(configuration);
         uaRef.current = ua;
 
+        // Intercept SDP to prefer PCMU/PCMA over Opus for Telnyx compatibility
+        ua.on('newRTCSession', (data) => {
+            const session = data.session;
+
+            session.on('peerconnection', (e) => {
+                const pc = e.peerconnection;
+
+                // Filter SDP to prefer G.711 codecs
+                const filterCodecs = (sdp) => {
+                    const lines = sdp.split('\r\n');
+                    const filteredLines = [];
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+
+                        // Modify m=audio line to prioritize PCMU (0) and PCMA (8)
+                        if (line.startsWith('m=audio')) {
+                            const parts = line.split(' ');
+                            const port = parts[1];
+                            const protocol = parts[2];
+                            const payloadTypes = parts.slice(3);
+
+                            // Put PCMU (0) and PCMA (8) first, then other codecs
+                            const reorderedPTs = [];
+                            if (payloadTypes.includes('0')) reorderedPTs.push('0'); // PCMU
+                            if (payloadTypes.includes('8')) reorderedPTs.push('8'); // PCMA
+                            payloadTypes.forEach(pt => {
+                                if (pt !== '0' && pt !== '8') reorderedPTs.push(pt);
+                            });
+
+                            filteredLines.push(`m=audio ${port} ${protocol} ${reorderedPTs.join(' ')}`);
+                            continue;
+                        }
+
+                        filteredLines.push(line);
+                    }
+
+                    return filteredLines.join('\r\n');
+                };
+
+                // Intercept createOffer
+                const originalCreateOffer = pc.createOffer.bind(pc);
+                pc.createOffer = async (options) => {
+                    const offer = await originalCreateOffer(options);
+                    offer.sdp = filterCodecs(offer.sdp);
+                    console.log('Filtered SDP (Offer):', offer.sdp);
+                    return offer;
+                };
+
+                // Intercept createAnswer
+                const originalCreateAnswer = pc.createAnswer.bind(pc);
+                pc.createAnswer = async (options) => {
+                    const answer = await originalCreateAnswer(options);
+                    answer.sdp = filterCodecs(answer.sdp);
+                    console.log('Filtered SDP (Answer):', answer.sdp);
+                    return answer;
+                };
+            });
+        });
+
         ua.on('connected', () => {
             console.log('WebSocket connected');
         });

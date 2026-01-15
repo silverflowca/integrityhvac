@@ -22,20 +22,24 @@ const PRIORITY_COLORS = {
     cold: '#06b6d4'
 };
 
-const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall }) => {
-    const [currentPage, setCurrentPage] = useState(1);
+const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall, currentPage: externalPage, onPageChange: externalPageChange }) => {
+    const [internalPage, setInternalPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
     const [statuses, setStatuses] = useState([]);
+
+    // Use external page if provided, otherwise use internal state
+    const currentPage = externalPage !== undefined ? externalPage : internalPage;
+    const setCurrentPage = externalPageChange || setInternalPage;
 
     // Fetch statuses on mount
     useEffect(() => {
         fetchStatuses();
     }, []);
 
-    // Reset to page 1 when leads or itemsPerPage changes
+    // Reset to page 1 only when itemsPerPage changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [leads.length, itemsPerPage]);
+    }, [itemsPerPage]);
 
     const fetchStatuses = async () => {
         try {

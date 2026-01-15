@@ -1,71 +1,54 @@
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import supabase from '../config/supabase.js';
 
 const router = express.Router();
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const STATUSES_FILE = path.join(DATA_DIR, 'statuses.json');
-
-// Default statuses
+// Default statuses (used for reset function)
 const DEFAULT_STATUSES = [
-    { id: '1', name: 'New', isDefault: true, order: 1 },
-    { id: '2', name: 'Contacted', isDefault: true, order: 2 },
-    { id: '3', name: 'No answer', isDefault: true, order: 3 },
-    { id: '4', name: 'Phone number not in service', isDefault: true, order: 4 },
-    { id: '5', name: 'Qualified', isDefault: true, order: 5 },
-    { id: '6', name: 'Quoted', isDefault: true, order: 6 },
-    { id: '7', name: 'Cleaning Lead', isDefault: true, order: 7 },
-    { id: '8', name: 'Won', isDefault: true, order: 8 },
-    { id: '9', name: 'Lost', isDefault: true, order: 9 },
-    { id: '10', name: 'Do Not Call', isDefault: true, order: 10 },
-    { id: '11', name: 'Call Back', isDefault: true, order: 11 }
+    { name: 'New', is_default: true, order: 1 },
+    { name: 'Contacted', is_default: true, order: 2 },
+    { name: 'No answer', is_default: true, order: 3 },
+    { name: 'Phone number not in service', is_default: true, order: 4 },
+    { name: 'Qualified', is_default: true, order: 5 },
+    { name: 'Quoted', is_default: true, order: 6 },
+    { name: 'Cleaning Lead', is_default: true, order: 7 },
+    { name: 'Won', is_default: true, order: 8 },
+    { name: 'Lost', is_default: true, order: 9 },
+    { name: 'Do Not Call', is_default: true, order: 10 },
+    { name: 'Call Back', is_default: true, order: 11 }
 ];
 
-// Initialize statuses file with defaults if it doesn't exist
-if (!fs.existsSync(STATUSES_FILE)) {
-    fs.writeFileSync(STATUSES_FILE, JSON.stringify(DEFAULT_STATUSES, null, 2));
-}
-
-const readStatuses = () => {
+/**
+ * Get all statuses
+ */
+router.get('/', async (req, res) => {
     try {
-        const data = fs.readFileSync(STATUSES_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error('Error reading statuses:', error);
-        return DEFAULT_STATUSES;
-    }
-};
+        const { data: statuses, error } = await supabase
+            .from('statuses')
+            .select('*')
+            .order('order', { ascending: true });
 
-const writeStatuses = (statuses) => {
-    try {
-        fs.writeFileSync(STATUSES_FILE, JSON.stringify(statuses, null, 2));
-        return true;
-    } catch (error) {
-        console.error('Error writing statuses:', error);
-        return false;
-    }
-};
+        if (error) throw error;
 
-// Get all statuses
-router.get('/', (req, res) => {
-    try {
-        const statuses = readStatuses();
-        // Sort by order field
-        const sortedStatuses = statuses.sort((a, b) => (a.order || 0) - (b.order || 0));
-        res.json({ success: true, statuses: sortedStatuses });
+        // Transform to frontend format
+        const transformedStatuses = statuses.map(status => ({
+            id: status.id,
+            name: status.name,
+            isDefault: status.is_default,
+            order: status.order
+        }));
+
+        res.json({ success: true, statuses: transformedStatuses });
     } catch (error) {
         console.error('Error getting statuses:', error);
         res.status(500).json({ success: false, error: 'Failed to get statuses' });
     }
 });
 
-// Add a new status
-router.post('/', (req, res) => {
+/**
+ * Add a new status
+ */
+router.post('/', async (req, res) => {
     try {
         const { name } = req.body;
 
@@ -73,51 +56,91 @@ router.post('/', (req, res) => {
             return res.status(400).json({ success: false, error: 'Status name is required' });
         }
 
-        const statuses = readStatuses();
-
         // Check for duplicate
-        if (statuses.some(s => s.name.toLowerCase() === name.trim().toLowerCase())) {
+        const { data: existing, error: checkError } = await supabase
+            .from('statuses')
+            .select('id')
+            .ilike('name', name.trim())
+            .limit(1);
+
+        if (checkError) throw checkError;
+
+        if (existing && existing.length > 0) {
             return res.status(400).json({ success: false, error: 'Status already exists' });
         }
 
         // Get the max order value
-        const maxOrder = statuses.reduce((max, s) => Math.max(max, s.order || 0), 0);
+        const { data: maxOrderResult, error: maxError } = await supabase
+            .from('statuses')
+            .select('order')
+            .order('order', { ascending: false })
+            .limit(1);
 
-        const newStatus = {
-            id: Date.now().toString(),
-            name: name.trim(),
-            isDefault: false,
-            order: maxOrder + 1
+        if (maxError) throw maxError;
+
+        const maxOrder = maxOrderResult && maxOrderResult.length > 0 ? maxOrderResult[0].order : 0;
+
+        // Insert new status
+        const { data: newStatus, error: insertError } = await supabase
+            .from('statuses')
+            .insert({
+                name: name.trim(),
+                is_default: false,
+                order: maxOrder + 1
+            })
+            .select()
+            .single();
+
+        if (insertError) throw insertError;
+
+        // Transform to frontend format
+        const transformedStatus = {
+            id: newStatus.id,
+            name: newStatus.name,
+            isDefault: newStatus.is_default,
+            order: newStatus.order
         };
 
-        statuses.push(newStatus);
-        writeStatuses(statuses);
-
-        res.status(201).json({ success: true, status: newStatus });
+        res.status(201).json({ success: true, status: transformedStatus });
     } catch (error) {
         console.error('Error adding status:', error);
         res.status(500).json({ success: false, error: 'Failed to add status' });
     }
 });
 
-// Delete a status
-router.delete('/:id', (req, res) => {
+/**
+ * Delete a status
+ */
+router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const statuses = readStatuses();
 
-        const statusIndex = statuses.findIndex(s => s.id === id);
-        if (statusIndex === -1) {
-            return res.status(404).json({ success: false, error: 'Status not found' });
+        // Check if status exists and is not default
+        const { data: status, error: fetchError } = await supabase
+            .from('statuses')
+            .select('is_default')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            if (fetchError.code === 'PGRST116') {
+                return res.status(404).json({ success: false, error: 'Status not found' });
+            }
+            throw fetchError;
         }
 
         // Don't allow deleting default statuses
-        if (statuses[statusIndex].isDefault) {
+        if (status.is_default) {
             return res.status(400).json({ success: false, error: 'Cannot delete default status' });
         }
 
-        statuses.splice(statusIndex, 1);
-        writeStatuses(statuses);
+        // Delete the status
+        const { error: deleteError } = await supabase
+            .from('statuses')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) throw deleteError;
 
         res.json({ success: true, message: 'Status deleted successfully' });
     } catch (error) {
@@ -126,19 +149,47 @@ router.delete('/:id', (req, res) => {
     }
 });
 
-// Reset to default statuses
-router.post('/reset', (req, res) => {
+/**
+ * Reset to default statuses
+ */
+router.post('/reset', async (req, res) => {
     try {
-        writeStatuses(DEFAULT_STATUSES);
-        res.json({ success: true, statuses: DEFAULT_STATUSES });
+        // Delete all custom statuses (is_default = false)
+        const { error: deleteError } = await supabase
+            .from('statuses')
+            .delete()
+            .eq('is_default', false);
+
+        if (deleteError) throw deleteError;
+
+        // Get the current default statuses
+        const { data: statuses, error: fetchError } = await supabase
+            .from('statuses')
+            .select('*')
+            .eq('is_default', true)
+            .order('order', { ascending: true });
+
+        if (fetchError) throw fetchError;
+
+        // Transform to frontend format
+        const transformedStatuses = statuses.map(status => ({
+            id: status.id,
+            name: status.name,
+            isDefault: status.is_default,
+            order: status.order
+        }));
+
+        res.json({ success: true, statuses: transformedStatuses });
     } catch (error) {
         console.error('Error resetting statuses:', error);
         res.status(500).json({ success: false, error: 'Failed to reset statuses' });
     }
 });
 
-// Update status order
-router.put('/reorder', (req, res) => {
+/**
+ * Update status order (drag and drop reordering)
+ */
+router.put('/reorder', async (req, res) => {
     try {
         const { statuses: reorderedStatuses } = req.body;
 
@@ -146,14 +197,34 @@ router.put('/reorder', (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid statuses array' });
         }
 
-        // Update order for each status
-        const updatedStatuses = reorderedStatuses.map((status, index) => ({
-            ...status,
-            order: index + 1
+        // Update order for each status using a transaction-like approach
+        const updates = reorderedStatuses.map((status, index) => {
+            return supabase
+                .from('statuses')
+                .update({ order: index + 1 })
+                .eq('id', status.id);
+        });
+
+        // Execute all updates
+        await Promise.all(updates);
+
+        // Fetch updated statuses
+        const { data: statuses, error } = await supabase
+            .from('statuses')
+            .select('*')
+            .order('order', { ascending: true });
+
+        if (error) throw error;
+
+        // Transform to frontend format
+        const transformedStatuses = statuses.map(status => ({
+            id: status.id,
+            name: status.name,
+            isDefault: status.is_default,
+            order: status.order
         }));
 
-        writeStatuses(updatedStatuses);
-        res.json({ success: true, statuses: updatedStatuses });
+        res.json({ success: true, statuses: transformedStatuses });
     } catch (error) {
         console.error('Error reordering statuses:', error);
         res.status(500).json({ success: false, error: 'Failed to reorder statuses' });

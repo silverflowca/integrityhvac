@@ -1,6 +1,8 @@
+// IMPORTANT: Load environment variables FIRST before any other imports
+import './config/env.js';
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,12 +11,12 @@ import authRoutes from './routes/auth.js';
 import dashboardRoutes from './routes/dashboard.js';
 import statusRoutes from './routes/statuses.js';
 import userRoutes from './routes/users.js';
+import leadsRoutes from './routes/leads.js';
+import supabase from './config/supabase.js';
 import { authenticateToken } from './middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 8677;
@@ -29,41 +31,6 @@ const publicPath = path.join(__dirname, 'public');
 if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
 }
-
-// Data storage (using JSON file for simplicity - can be replaced with a database)
-const DATA_DIR = path.join(__dirname, 'data');
-const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
-// Initialize leads file if it doesn't exist
-if (!fs.existsSync(LEADS_FILE)) {
-    fs.writeFileSync(LEADS_FILE, JSON.stringify([]));
-}
-
-// Helper functions for data management
-const readLeads = () => {
-    try {
-        const data = fs.readFileSync(LEADS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error('Error reading leads:', error);
-        return [];
-    }
-};
-
-const writeLeads = (leads) => {
-    try {
-        fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
-        return true;
-    } catch (error) {
-        console.error('Error writing leads:', error);
-        return false;
-    }
-};
 
 // ============================================================================
 // API ENDPOINTS
@@ -81,155 +48,22 @@ app.use('/api/statuses', authenticateToken, statusRoutes);
 // User routes (protected)
 app.use('/api/users', authenticateToken, userRoutes);
 
+// Leads routes (protected)
+app.use('/api/leads', authenticateToken, leadsRoutes);
+
 // Health check (public)
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Integrity HVAC CRM API is running' });
 });
 
-// Protected routes - all leads endpoints require authentication
-// Get all leads
-app.get('/api/leads', authenticateToken, (req, res) => {
+// Get statistics (using Supabase)
+app.get('/api/stats', authenticateToken, async (req, res) => {
     try {
-        const leads = readLeads();
-        res.json({ success: true, leads });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+        const { data: leads, error } = await supabase
+            .from('leads')
+            .select('status, priority');
 
-// Get lead by ID
-app.get('/api/leads/:id', authenticateToken, (req, res) => {
-    try {
-        const leads = readLeads();
-        const lead = leads.find(l => l.id === req.params.id);
-
-        if (lead) {
-            res.json({ success: true, lead });
-        } else {
-            res.status(404).json({ success: false, error: 'Lead not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Create new lead
-app.post('/api/leads', authenticateToken, (req, res) => {
-    try {
-        const leads = readLeads();
-        const newLead = {
-            id: Date.now().toString(),
-            ...req.body,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-
-        leads.push(newLead);
-
-        if (writeLeads(leads)) {
-            res.status(201).json({ success: true, lead: newLead });
-        } else {
-            res.status(500).json({ success: false, error: 'Failed to save lead' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Update lead
-app.put('/api/leads/:id', authenticateToken, (req, res) => {
-    try {
-        const leads = readLeads();
-        const index = leads.findIndex(l => l.id === req.params.id);
-
-        if (index !== -1) {
-            const oldLead = leads[index];
-            const newData = req.body;
-
-            // Initialize audit trail if it doesn't exist
-            if (!oldLead.auditTrail) {
-                oldLead.auditTrail = [];
-            }
-
-            // Track changes
-            const changes = [];
-            const fieldsToTrack = ['status', 'priority', 'assignedTo', 'company', 'name', 'phone', 'email', 'location', 'callbackDate'];
-
-            fieldsToTrack.forEach(field => {
-                if (newData[field] !== undefined && newData[field] !== oldLead[field]) {
-                    changes.push({
-                        field,
-                        oldValue: oldLead[field] || '',
-                        newValue: newData[field] || ''
-                    });
-                }
-            });
-
-            // Add audit entry if there are changes
-            if (changes.length > 0) {
-                oldLead.auditTrail.push({
-                    timestamp: new Date().toISOString(),
-                    userId: req.user.id,
-                    userName: req.user.name || req.user.email,
-                    action: 'updated',
-                    changes
-                });
-            }
-
-            leads[index] = {
-                ...oldLead,
-                ...newData,
-                updatedAt: new Date().toISOString()
-            };
-
-            if (writeLeads(leads)) {
-                res.json({ success: true, lead: leads[index] });
-            } else {
-                res.status(500).json({ success: false, error: 'Failed to update lead' });
-            }
-        } else {
-            res.status(404).json({ success: false, error: 'Lead not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Delete lead
-app.delete('/api/leads/:id', authenticateToken, (req, res) => {
-    try {
-        const leads = readLeads();
-        const filteredLeads = leads.filter(l => l.id !== req.params.id);
-
-        if (filteredLeads.length < leads.length) {
-            if (writeLeads(filteredLeads)) {
-                res.json({ success: true, message: 'Lead deleted successfully' });
-            } else {
-                res.status(500).json({ success: false, error: 'Failed to delete lead' });
-            }
-        } else {
-            res.status(404).json({ success: false, error: 'Lead not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Get leads by status
-app.get('/api/leads/status/:status', authenticateToken, (req, res) => {
-    try {
-        const leads = readLeads();
-        const filteredLeads = leads.filter(l => l.status === req.params.status);
-        res.json({ success: true, leads: filteredLeads });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// Get statistics
-app.get('/api/stats', authenticateToken, (req, res) => {
-    try {
-        const leads = readLeads();
+        if (error) throw error;
 
         const stats = {
             total: leads.length,
@@ -250,6 +84,7 @@ app.get('/api/stats', authenticateToken, (req, res) => {
 
         res.json({ success: true, stats });
     } catch (error) {
+        console.error('Error getting stats:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

@@ -1,76 +1,31 @@
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import supabase from '../config/supabase.js';
 
 const router = express.Router();
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const ACTIVITIES_FILE = path.join(DATA_DIR, 'activities.json');
-
-// Ensure activities file exists
-if (!fs.existsSync(ACTIVITIES_FILE)) {
-    fs.writeFileSync(ACTIVITIES_FILE, JSON.stringify([]));
-}
-
-const readLeads = () => {
-    try {
-        const data = fs.readFileSync(LEADS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return [];
-    }
-};
-
-const readUsers = () => {
-    try {
-        const data = fs.readFileSync(USERS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return [];
-    }
-};
-
-const readActivities = () => {
-    try {
-        const data = fs.readFileSync(ACTIVITIES_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return [];
-    }
-};
-
-const writeActivities = (activities) => {
-    try {
-        fs.writeFileSync(ACTIVITIES_FILE, JSON.stringify(activities, null, 2));
-        return true;
-    } catch (error) {
-        console.error('Error writing activities:', error);
-        return false;
-    }
-};
-
-const writeLeads = (leads) => {
-    try {
-        fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
-        return true;
-    } catch (error) {
-        console.error('Error writing leads:', error);
-        return false;
-    }
-};
-
 // Get admin dashboard stats (team overview)
-router.get('/admin', (req, res) => {
+router.get('/admin', async (req, res) => {
     try {
-        const leads = readLeads();
-        const users = readUsers();
-        const activities = readActivities();
+        // Fetch all leads with status and priority
+        const { data: leads, error: leadsError } = await supabase
+            .from('leads')
+            .select('id, status, priority, assigned_to');
+
+        if (leadsError) throw leadsError;
+
+        // Fetch all users
+        const { data: users, error: usersError } = await supabase
+            .from('users')
+            .select('id, name, email');
+
+        if (usersError) throw usersError;
+
+        // Fetch all activities
+        const { data: activities, error: activitiesError } = await supabase
+            .from('activities')
+            .select('*');
+
+        if (activitiesError) throw activitiesError;
 
         // Calculate team stats
         const totalLeads = leads.length;
@@ -96,7 +51,7 @@ router.get('/admin', (req, res) => {
 
         // User performance (calls per user)
         const userStats = users.map(user => {
-            const userActivities = activities.filter(a => a.userId === user.id);
+            const userActivities = activities.filter(a => a.user_id === user.id);
             const userCallActivities = userActivities.filter(a => a.type === 'call');
             const userCalls = userCallActivities.length;
 
@@ -104,7 +59,7 @@ router.get('/admin', (req, res) => {
             const totalCallSeconds = userCallActivities.reduce((sum, a) => sum + (a.duration || 0), 0);
             const totalCallMinutes = Math.round(totalCallSeconds / 60);
 
-            const userLeads = leads.filter(l => l.assignedTo === user.id);
+            const userLeads = leads.filter(l => l.assigned_to === user.id);
             const userWonLeads = userLeads.filter(l => l.status === 'won').length;
 
             return {
@@ -130,25 +85,25 @@ router.get('/admin', (req, res) => {
 
         const callMinutesToday = Math.round(
             callActivities
-                .filter(a => new Date(a.timestamp) >= todayStart)
+                .filter(a => new Date(a.created_at) >= todayStart)
                 .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
         );
 
         const callMinutesWeek = Math.round(
             callActivities
-                .filter(a => new Date(a.timestamp) >= weekStart)
+                .filter(a => new Date(a.created_at) >= weekStart)
                 .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
         );
 
         const callMinutesMonth = Math.round(
             callActivities
-                .filter(a => new Date(a.timestamp) >= monthStart)
+                .filter(a => new Date(a.created_at) >= monthStart)
                 .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
         );
 
         const callMinutesYear = Math.round(
             callActivities
-                .filter(a => new Date(a.timestamp) >= yearStart)
+                .filter(a => new Date(a.created_at) >= yearStart)
                 .reduce((sum, a) => sum + (a.duration || 0), 0) / 60
         );
 
@@ -157,9 +112,18 @@ router.get('/admin', (req, res) => {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         const recentActivities = activities
-            .filter(a => new Date(a.timestamp) >= sevenDaysAgo)
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-            .slice(0, 20);
+            .filter(a => new Date(a.created_at) >= sevenDaysAgo)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+            .slice(0, 20)
+            .map(a => ({
+                id: a.id,
+                userId: a.user_id,
+                leadId: a.lead_id,
+                type: a.type,
+                duration: a.duration,
+                notes: a.notes,
+                timestamp: a.created_at
+            }));
 
         res.json({
             success: true,
@@ -188,14 +152,18 @@ router.get('/admin', (req, res) => {
 });
 
 // Get individual user dashboard stats
-router.get('/individual', (req, res) => {
+router.get('/individual', async (req, res) => {
     try {
         const userId = req.user.id;
-        const leads = readLeads();
-        const activities = readActivities();
 
-        // User's leads (ONLY assigned to this user)
-        const userLeads = leads.filter(l => l.assignedTo === userId);
+        // Fetch user's leads (only assigned to this user)
+        const { data: userLeads, error: leadsError } = await supabase
+            .from('leads')
+            .select('id, status, priority, assigned_to')
+            .eq('assigned_to', userId);
+
+        if (leadsError) throw leadsError;
+
         const totalLeads = userLeads.length;
 
         // Status breakdown
@@ -211,7 +179,13 @@ router.get('/individual', (req, res) => {
         }, {});
 
         // User's activities
-        const userActivities = activities.filter(a => a.userId === userId);
+        const { data: userActivities, error: activitiesError } = await supabase
+            .from('activities')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (activitiesError) throw activitiesError;
+
         const totalCalls = userActivities.filter(a => a.type === 'call').length;
         const totalEmails = userActivities.filter(a => a.type === 'email').length;
         const totalNotes = userActivities.filter(a => a.type === 'note').length;
@@ -231,7 +205,7 @@ router.get('/individual', (req, res) => {
         }
 
         userActivities.forEach(activity => {
-            const dateStr = activity.timestamp.split('T')[0];
+            const dateStr = activity.created_at.split('T')[0];
             if (activityByDay[dateStr]) {
                 activityByDay[dateStr][activity.type + 's'] = (activityByDay[dateStr][activity.type + 's'] || 0) + 1;
             }
@@ -241,7 +215,7 @@ router.get('/individual', (req, res) => {
         const dailyCallGoal = 20;
         const today = new Date().toISOString().split('T')[0];
         const todayCalls = userActivities.filter(a =>
-            a.type === 'call' && a.timestamp.startsWith(today)
+            a.type === 'call' && a.created_at.startsWith(today)
         ).length;
         const callProgress = Math.min(100, (todayCalls / dailyCallGoal * 100).toFixed(0));
 
@@ -277,70 +251,86 @@ router.get('/individual', (req, res) => {
 });
 
 // Log activity (for tracking calls, emails, notes)
-router.post('/activity', (req, res) => {
+router.post('/activity', async (req, res) => {
     try {
         const { type, leadId, duration, notes } = req.body;
         const userId = req.user.id;
 
-        const activities = readActivities();
+        // Insert new activity into Supabase
+        const { data: newActivity, error: activityError } = await supabase
+            .from('activities')
+            .insert({
+                user_id: userId,
+                lead_id: leadId,
+                type, // 'call', 'email', 'note'
+                duration, // in seconds (for calls)
+                notes
+            })
+            .select()
+            .single();
 
-        const newActivity = {
-            id: Date.now().toString(),
-            userId,
-            leadId,
-            type, // 'call', 'email', 'note'
-            duration, // in seconds (for calls)
-            notes,
-            timestamp: new Date().toISOString()
-        };
-
-        activities.push(newActivity);
-        writeActivities(activities);
+        if (activityError) throw activityError;
 
         // If this is a call activity with a leadId, update the lead's notes and audit trail
         if (type === 'call' && leadId) {
-            const leads = readLeads();
-            const leadIndex = leads.findIndex(l => l.id === leadId);
+            // Get the lead
+            const { data: lead, error: leadError } = await supabase
+                .from('leads')
+                .select('notes')
+                .eq('id', leadId)
+                .single();
 
-            if (leadIndex !== -1) {
-                const lead = leads[leadIndex];
+            if (leadError) throw leadError;
 
-                // Initialize audit trail if it doesn't exist
-                if (!lead.auditTrail) {
-                    lead.auditTrail = [];
-                }
-
-                // Add audit trail entry for the call
-                lead.auditTrail.push({
-                    timestamp: new Date().toISOString(),
-                    userId: req.user.id,
-                    userName: req.user.name || req.user.email,
+            // Add audit trail entry for the call
+            await supabase
+                .from('audit_trails')
+                .insert({
+                    lead_id: leadId,
+                    user_id: userId,
+                    user_name: req.user.name || req.user.email,
                     action: 'called',
-                    duration,
-                    notes: notes?.trim() || ''
+                    changes: {
+                        duration,
+                        notes: notes?.trim() || ''
+                    }
                 });
 
-                // If there are notes, also append them to the notes field
-                if (notes && notes.trim()) {
-                    const timestamp = new Date().toLocaleString();
-                    const callNote = `[Call - ${timestamp}] ${notes.trim()}`;
+            // If there are notes, append them to the lead's notes field
+            if (notes && notes.trim()) {
+                const timestamp = new Date().toLocaleString();
+                const callNote = `[Call - ${timestamp}] ${notes.trim()}`;
 
-                    if (lead.notes && lead.notes.trim()) {
-                        lead.notes = lead.notes.trim() + '\n\n' + callNote;
-                    } else {
-                        lead.notes = callNote;
-                    }
+                let updatedNotes;
+                if (lead.notes && lead.notes.trim()) {
+                    updatedNotes = lead.notes.trim() + '\n\n' + callNote;
+                } else {
+                    updatedNotes = callNote;
                 }
 
-                leads[leadIndex] = lead;
-                writeLeads(leads);
+                await supabase
+                    .from('leads')
+                    .update({ notes: updatedNotes })
+                    .eq('id', leadId);
+
                 console.log(`Call activity added to audit trail for lead ${leadId}`);
             }
         }
 
+        // Transform the response to match the expected format
+        const transformedActivity = {
+            id: newActivity.id,
+            userId: newActivity.user_id,
+            leadId: newActivity.lead_id,
+            type: newActivity.type,
+            duration: newActivity.duration,
+            notes: newActivity.notes,
+            timestamp: newActivity.created_at
+        };
+
         res.status(201).json({
             success: true,
-            activity: newActivity
+            activity: transformedActivity
         });
     } catch (error) {
         console.error('Error logging activity:', error);

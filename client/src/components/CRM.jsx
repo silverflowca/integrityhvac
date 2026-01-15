@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './layout/Sidebar';
 import Topbar from './layout/Topbar';
 import LeadListView from './leads/LeadListView';
@@ -27,6 +27,8 @@ function CRM() {
     const [showSipSettings, setShowSipSettings] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [users, setUsers] = useState([]);
+    const [currentPageState, setCurrentPageState] = useState(1);
+    const preservePageRef = useRef(false);
     const [filters, setFilters] = useState({
         status: 'all',
         priority: 'all',
@@ -70,7 +72,13 @@ function CRM() {
         result = sortLeads(result, filters.sortBy);
 
         setFilteredLeads(result);
-    }, [searchTerm, leads, filters]);
+
+        // Reset page to 1 when filters change (unless we're preserving page)
+        if (!preservePageRef.current) {
+            setCurrentPageState(1);
+        }
+        preservePageRef.current = false;
+    }, [searchTerm, filters, leads]);
 
     const sortLeads = (leadsToSort, sortBy) => {
         const sorted = [...leadsToSort];
@@ -170,10 +178,12 @@ function CRM() {
     const handleSaveLead = async (leadData) => {
         try {
             if (editingLead) {
-                // Update existing lead
+                // Update existing lead - preserve current page
+                preservePageRef.current = true;
                 await api.updateLead(editingLead.id, leadData);
             } else {
-                // Create new lead
+                // Create new lead - reset to page 1
+                preservePageRef.current = false;
                 await api.createLead(leadData);
             }
             await fetchLeads();
@@ -201,6 +211,8 @@ function CRM() {
 
     const handleUpdateStatus = async (leadId, newStatus) => {
         try {
+            // Status updates should preserve current page
+            preservePageRef.current = true;
             await api.updateLead(leadId, { status: newStatus });
             await fetchLeads();
         } catch (err) {
@@ -265,6 +277,8 @@ function CRM() {
                     onDeleteLead={handleDeleteLead}
                     onUpdateStatus={handleUpdateStatus}
                     onCall={handleCall}
+                    currentPage={currentPageState}
+                    onPageChange={setCurrentPageState}
                 />
             );
         } else {
@@ -289,6 +303,8 @@ function CRM() {
                                 onDeleteLead={handleDeleteLead}
                                 onUpdateStatus={handleUpdateStatus}
                                 onCall={handleCall}
+                                currentPage={currentPageState}
+                                onPageChange={setCurrentPageState}
                             />
                         </div>
                     ))}
