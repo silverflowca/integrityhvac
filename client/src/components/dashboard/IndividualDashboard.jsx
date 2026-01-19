@@ -57,17 +57,21 @@ function IndividualDashboard() {
     }
 
     // Prepare chart data
-    const statusData = Object.entries(stats.statusBreakdown).map(([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        value,
-        color: COLORS[name]
-    }));
+    const statusData = Object.entries(stats.statusBreakdown || {})
+        .filter(([name, value]) => value > 0)
+        .map(([name, value]) => ({
+            name: name.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            value,
+            color: COLORS[name] || '#94a3b8'
+        }));
 
-    const priorityData = Object.entries(stats.priorityBreakdown).map(([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        value,
-        color: COLORS[name]
-    }));
+    const priorityData = Object.entries(stats.priorityBreakdown || {})
+        .filter(([name, value]) => value > 0)
+        .map(([name, value]) => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+            value,
+            color: COLORS[name] || '#94a3b8'
+        }));
 
     const activityData = Object.entries(stats.activityByDay).map(([date, activities]) => ({
         date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -170,49 +174,61 @@ function IndividualDashboard() {
                 {/* Status Breakdown */}
                 <div className="chart-card">
                     <h3>Leads by Status</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={statusData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={({ name, value }) => `${name}: ${value}`}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                            >
-                                {statusData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
+                    {statusData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={statusData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, value }) => `${name}: ${value}`}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {statusData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="empty-chart">
+                            <p>No leads assigned yet</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Priority Breakdown */}
                 <div className="chart-card">
                     <h3>Leads by Priority</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={priorityData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={({ name, value }) => `${name}: ${value}`}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                            >
-                                {priorityData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip />
-                        </PieChart>
-                    </ResponsiveContainer>
+                    {priorityData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                                <Pie
+                                    data={priorityData}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, value }) => `${name}: ${value}`}
+                                    outerRadius={80}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {priorityData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="empty-chart">
+                            <p>No leads assigned yet</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

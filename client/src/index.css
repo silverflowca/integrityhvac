@@ -22,6 +22,9 @@
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
     --shadow-lg: 0 10px 20px rgba(0,0,0,0.15);
+    /* Aliases for compatibility */
+    --primary-color: #667eea;
+    --primary-hover: #5a67d8;
 }
 
 body {

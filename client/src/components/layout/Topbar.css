@@ -72,14 +72,16 @@
 }
 
 .btn-primary {
-    background: var(--accent-primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    white-space: nowrap;
 }
 
 .btn-primary:hover {
-    background: #0284c7;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .btn-secondary {
@@ -230,7 +232,16 @@
         display: none;
     }
 
+    .btn-primary {
+        padding: 8px 14px;
+    }
+
     .btn-primary span {
         display: none;
     }
+}
+
+/* Add Lead button specific styling */
+.topbar-actions .btn-primary {
+    margin-left: 4px;
 }

@@ -27,6 +27,17 @@
     letter-spacing: 0.5px;
 }
 
+.leads-table th.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.leads-table th.sortable-header:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
 .leads-table tbody tr {
     border-bottom: 1px solid #e2e8f0;
     transition: background-color 0.2s;
@@ -82,6 +93,24 @@
     text-transform: capitalize;
 }
 
+.call-count-cell {
+    text-align: center;
+}
+
+.call-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 14px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 .status-select-inline {
     padding: 4px 8px;
     border: 2px solid;
@@ -95,6 +124,30 @@
 
 .status-select-inline:hover {
     background: #f8fafc;
+}
+
+.campaign-select-inline {
+    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    color: #334155;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+    max-width: 150px;
+}
+
+.campaign-select-inline:hover {
+    border-color: #667eea;
+    background: #f8fafc;
+}
+
+.campaign-select-inline:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
 }
 
 .actions-cell {
@@ -348,4 +401,150 @@
         padding: 6px 12px;
         font-size: 13px;
     }
+}
+
+/* New Campaign Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.new-campaign-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    margin: 20px;
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.new-campaign-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.new-campaign-modal .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.new-campaign-modal .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.new-campaign-modal .modal-close:hover {
+    color: #1e293b;
+}
+
+.new-campaign-modal .modal-body {
+    padding: 20px;
+}
+
+.new-campaign-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.new-campaign-modal .form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.new-campaign-modal .form-group input {
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1e293b;
+    transition: all 0.2s;
+}
+
+.new-campaign-modal .form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.new-campaign-modal .form-group input::placeholder {
+    color: #94a3b8;
+}
+
+.new-campaign-modal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 12px 12px;
+}
+
+.new-campaign-modal .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.new-campaign-modal .btn-secondary {
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #475569;
+}
+
+.new-campaign-modal .btn-secondary:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.new-campaign-modal .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.new-campaign-modal .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.new-campaign-modal .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

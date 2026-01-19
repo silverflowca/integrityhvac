@@ -50,6 +50,13 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
                         <span className="nav-badge">{leadCount}</span>
                     </div>
                     <div
+                        className={'nav-item ' + (activeView === 'my-leads' ? 'active' : '')}
+                        onClick={() => handleNavClick('my-leads')}
+                    >
+                        <span className="nav-icon">🎯</span>
+                        My Leads
+                    </div>
+                    <div
                         className={'nav-item ' + (activeView === 'dashboard' ? 'active' : '')}
                         onClick={() => handleNavClick('dashboard')}
                     >
@@ -64,26 +71,42 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
                         Team Dashboard
                     </div>
                     <div
-                        className={'nav-item ' + (activeView === 'call-queue' ? 'active' : '')}
-                        onClick={() => handleNavClick('call-queue')}
+                        className="nav-item disabled"
+                        title="Coming soon"
                     >
                         <span className="nav-icon">📞</span>
                         Call Queue
+                    </div>
+                    <div
+                        className={'nav-item ' + (activeView === 'campaigns' ? 'active' : '')}
+                        onClick={() => handleNavClick('campaigns')}
+                    >
+                        <span className="nav-icon">📁</span>
+                        Campaigns
                     </div>
                 </div>
 
                 <div className="nav-section">
                     <div className="nav-section-title">Management</div>
+                    {user && user.role === 'admin' && (
+                        <div
+                            className={'nav-item ' + (activeView === 'users' ? 'active' : '')}
+                            onClick={() => handleNavClick('users')}
+                        >
+                            <span className="nav-icon">👤</span>
+                            User Management
+                        </div>
+                    )}
                     <div
-                        className={'nav-item ' + (activeView === 'contacts' ? 'active' : '')}
-                        onClick={() => handleNavClick('contacts')}
+                        className="nav-item disabled"
+                        title="Coming soon"
                     >
                         <span className="nav-icon">👥</span>
                         Contacts
                     </div>
                     <div
-                        className={'nav-item ' + (activeView === 'reports' ? 'active' : '')}
-                        onClick={() => handleNavClick('reports')}
+                        className="nav-item disabled"
+                        title="Coming soon"
                     >
                         <span className="nav-icon">📈</span>
                         Reports

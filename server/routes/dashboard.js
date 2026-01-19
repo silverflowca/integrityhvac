@@ -205,6 +205,7 @@ router.get('/individual', async (req, res) => {
         }
 
         userActivities.forEach(activity => {
+            if (!activity.created_at) return; // Skip activities without created_at
             const dateStr = activity.created_at.split('T')[0];
             if (activityByDay[dateStr]) {
                 activityByDay[dateStr][activity.type + 's'] = (activityByDay[dateStr][activity.type + 's'] || 0) + 1;
@@ -215,7 +216,7 @@ router.get('/individual', async (req, res) => {
         const dailyCallGoal = 20;
         const today = new Date().toISOString().split('T')[0];
         const todayCalls = userActivities.filter(a =>
-            a.type === 'call' && a.created_at.startsWith(today)
+            a.type === 'call' && a.created_at && a.created_at.startsWith(today)
         ).length;
         const callProgress = Math.min(100, (todayCalls / dailyCallGoal * 100).toFixed(0));
 

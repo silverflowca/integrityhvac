@@ -22,18 +22,22 @@ const PRIORITY_COLORS = {
     cold: '#06b6d4'
 };
 
-const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall, currentPage: externalPage, onPageChange: externalPageChange }) => {
+const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdateCampaign, onCall, currentPage: externalPage, onPageChange: externalPageChange }) => {
     const [internalPage, setInternalPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
     const [statuses, setStatuses] = useState([]);
+    const [campaigns, setCampaigns] = useState([]);
+    const [sortField, setSortField] = useState(null);
+    const [sortDirection, setSortDirection] = useState('asc');
 
     // Use external page if provided, otherwise use internal state
     const currentPage = externalPage !== undefined ? externalPage : internalPage;
     const setCurrentPage = externalPageChange || setInternalPage;
 
-    // Fetch statuses on mount
+    // Fetch statuses and campaigns on mount
     useEffect(() => {
         fetchStatuses();
+        fetchCampaigns();
     }, []);
 
     // Reset to page 1 only when itemsPerPage changes
@@ -64,6 +68,28 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall,
         }
     };
 
+    const fetchCampaigns = async () => {
+        try {
+            const response = await api.getCampaigns();
+            setCampaigns(response.campaigns || []);
+        } catch (error) {
+            console.error('Error fetching campaigns:', error);
+            setCampaigns([]);
+        }
+    };
+
+    const handleCampaignChange = (leadId, campaignId) => {
+        if (onUpdateCampaign) {
+            onUpdateCampaign(leadId, campaignId || null);
+        }
+    };
+
+    const getCampaignName = (campaignId) => {
+        if (!campaignId) return null;
+        const campaign = campaigns.find(c => c.id === campaignId);
+        return campaign ? campaign.name : null;
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
@@ -80,11 +106,47 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall,
         }
     };
 
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const getSortIcon = (field) => {
+        if (sortField !== field) return '↕';
+        return sortDirection === 'asc' ? '↑' : '↓';
+    };
+
+    // Sort leads
+    const sortedLeads = [...leads].sort((a, b) => {
+        if (!sortField) return 0;
+
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+
+        // Handle null/undefined
+        if (aVal == null) aVal = sortDirection === 'asc' ? Infinity : -Infinity;
+        if (bVal == null) bVal = sortDirection === 'asc' ? Infinity : -Infinity;
+
+        // Numeric comparison for callCount
+        if (sortField === 'callCount') {
+            aVal = Number(aVal) || 0;
+            bVal = Number(bVal) || 0;
+        }
+
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     // Pagination calculations
-    const totalPages = Math.ceil(leads.length / itemsPerPage);
+    const totalPages = Math.ceil(sortedLeads.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = Math.min(startIndex + itemsPerPage, leads.length);
-    const paginatedLeads = leads.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + itemsPerPage, sortedLeads.length);
+    const paginatedLeads = sortedLeads.slice(startIndex, endIndex);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -210,8 +272,16 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall,
                         <th>Phone</th>
                         <th>Email</th>
                         <th>Location</th>
+                        <th>Campaign</th>
                         <th>Priority</th>
                         <th>Status</th>
+                        <th
+                            className="sortable-header"
+                            onClick={() => handleSort('callCount')}
+                            title="Click to sort by call count"
+                        >
+                            Calls {getSortIcon('callCount')}
+                        </th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -249,6 +319,20 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall,
                             <td className="email-cell">{lead.email || 'No email'}</td>
                             <td>{lead.location || 'No location'}</td>
                             <td>
+                                <select
+                                    className="campaign-select-inline"
+                                    value={lead.campaignId || ''}
+                                    onChange={(e) => handleCampaignChange(lead.id, e.target.value)}
+                                >
+                                    <option value="">No Campaign</option>
+                                    {campaigns.map(campaign => (
+                                        <option key={campaign.id} value={campaign.id}>
+                                            {campaign.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </td>
+                            <td>
                                 <span
                                     className="priority-badge"
                                     style={{ backgroundColor: PRIORITY_COLORS[lead.priority] || '#94a3b8' }}
@@ -272,6 +356,11 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall,
                                         </option>
                                     ))}
                                 </select>
+                            </td>
+                            <td className="call-count-cell">
+                                <span className="call-count-badge">
+                                    {lead.callCount || 0}
+                                </span>
                             </td>
                             <td>{formatDate(lead.createdAt)}</td>
                             <td className="actions-cell">

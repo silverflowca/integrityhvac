@@ -123,3 +123,14 @@
     background: white;
     color: var(--accent-primary);
 }
+
+.nav-item.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.nav-item.disabled:hover {
+    background: transparent;
+    color: var(--text-secondary);
+}

@@ -12,6 +12,7 @@ import dashboardRoutes from './routes/dashboard.js';
 import statusRoutes from './routes/statuses.js';
 import userRoutes from './routes/users.js';
 import leadsRoutes from './routes/leads.js';
+import campaignsRoutes from './routes/campaigns.js';
 import supabase from './config/supabase.js';
 import { authenticateToken } from './middleware/auth.js';
 
@@ -50,6 +51,9 @@ app.use('/api/users', authenticateToken, userRoutes);
 
 // Leads routes (protected)
 app.use('/api/leads', authenticateToken, leadsRoutes);
+
+// Campaigns routes (protected)
+app.use('/api/campaigns', authenticateToken, campaignsRoutes);
 
 // Health check (public)
 app.get('/api/health', (req, res) => {

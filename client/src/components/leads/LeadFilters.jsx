@@ -5,9 +5,11 @@ import './LeadFilters.css';
 const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, leadCount }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [statuses, setStatuses] = useState([]);
+    const [campaigns, setCampaigns] = useState([]);
 
     useEffect(() => {
         fetchStatuses();
+        fetchCampaigns();
     }, []);
 
     const fetchStatuses = async () => {
@@ -19,7 +21,16 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
         }
     };
 
-    const hasActiveFilters = filters.status !== 'all' || filters.priority !== 'all';
+    const fetchCampaigns = async () => {
+        try {
+            const response = await api.getCampaigns();
+            setCampaigns(response.campaigns || []);
+        } catch (error) {
+            console.error('Error fetching campaigns:', error);
+        }
+    };
+
+    const hasActiveFilters = filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all';
 
     return (
         <div className="lead-filters">
@@ -27,7 +38,7 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                 <div className="filter-header-left">
                     <span className="filter-icon">🔍</span>
                     <span className="filter-title">Filters & Sort</span>
-                    {hasActiveFilters && <span className="filter-badge">{(filters.status !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0)}</span>}
+                    {hasActiveFilters && <span className="filter-badge">{(filters.status !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0) + (filters.campaign !== 'all' ? 1 : 0)}</span>}
                 </div>
                 <div className="filter-header-right">
                     <span className="lead-count-mobile">{leadCount}</span>
@@ -70,6 +81,23 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                 </div>
 
                 <div className="filter-group">
+                    <label className="filter-label">Campaign</label>
+                    <select
+                        className="filter-select"
+                        value={filters.campaign || 'all'}
+                        onChange={(e) => onFilterChange('campaign', e.target.value)}
+                    >
+                        <option value="all">All Campaigns</option>
+                        <option value="unassigned">No Campaign</option>
+                        {campaigns.map(campaign => (
+                            <option key={campaign.id} value={campaign.id}>
+                                {campaign.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="filter-group">
                     <label className="filter-label">Sort By</label>
                     <select
                         className="filter-select"
@@ -103,12 +131,13 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                     <span className="lead-count">{leadCount} leads</span>
                 </div>
 
-                {(filters.status !== 'all' || filters.priority !== 'all') && (
+                {(filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all') && (
                     <button
                         className="btn-clear-filters"
                         onClick={() => {
                             onFilterChange('status', 'all');
                             onFilterChange('priority', 'all');
+                            onFilterChange('campaign', 'all');
                         }}
                         title="Clear all filters"
                     >

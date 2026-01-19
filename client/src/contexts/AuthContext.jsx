@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             console.log('Auth state changed:', event);
 
             if (session?.user) {
@@ -21,7 +21,9 @@ export const AuthProvider = ({ children }) => {
                 if (session.access_token) {
                     localStorage.setItem('token', session.access_token);
                 }
-                await loadUserProfile(session.user);
+                setUser(session.user);
+                // Load profile in background
+                loadUserProfile(session.user);
             } else {
                 // Clear token on logout
                 localStorage.removeItem('token');
@@ -37,32 +39,28 @@ export const AuthProvider = ({ children }) => {
         try {
             const { data: { session }, error } = await supabase.auth.getSession();
 
-            if (error) throw error;
+            if (error) {
+                console.error('getSession error:', error);
+                throw error;
+            }
 
             if (session?.user) {
-                // Validate the session by checking if user exists in database
-                const isValid = await validateSession(session.user);
-                if (isValid) {
-                    // Store access token in localStorage for API requests
-                    if (session.access_token) {
-                        localStorage.setItem('token', session.access_token);
-                    }
-                    await loadUserProfile(session.user);
-                } else {
-                    // Session is stale (user doesn't exist in DB after reset)
-                    console.log('Stale session detected, signing out...');
-                    await supabase.auth.signOut();
-                    localStorage.removeItem('token');
-                    setUser(null);
-                    setProfile(null);
+                // Store access token in localStorage for API requests
+                if (session.access_token) {
+                    localStorage.setItem('token', session.access_token);
                 }
+                // Set user immediately from session
+                setUser(session.user);
+                // Load profile in background (don't await)
+                loadUserProfile(session.user);
             } else {
-                // Clear token if no session
+                // No session - user is not logged in
                 localStorage.removeItem('token');
+                setUser(null);
+                setProfile(null);
             }
         } catch (error) {
             console.error('Auth check failed:', error);
-            // On any auth error, clear the session
             localStorage.removeItem('token');
             setUser(null);
             setProfile(null);
@@ -80,10 +78,20 @@ export const AuthProvider = ({ children }) => {
                 .eq('id', authUser.id)
                 .single();
 
-            // If no error and data exists, session is valid
-            return !error && data;
-        } catch {
-            return false;
+            if (error) {
+                console.log('Validate session error:', error.message);
+                // If profile doesn't exist yet, still consider session valid
+                // (profile will be created on first load)
+                if (error.code === 'PGRST116') {
+                    return true; // No profile yet, but auth is valid
+                }
+                return false;
+            }
+            return !!data;
+        } catch (err) {
+            console.error('validateSession exception:', err);
+            // On error, assume session is valid to avoid blocking login
+            return true;
         }
     };
 
@@ -96,18 +104,11 @@ export const AuthProvider = ({ children }) => {
                 .eq('id', authUser.id)
                 .single();
 
-            if (error) {
-                // If profile doesn't exist, it will be created by trigger
-                console.log('Profile not found, it will be created automatically');
+            if (!error && profileData) {
+                setProfile(profileData);
             }
-
-            setUser(authUser);
-            setProfile(profileData);
         } catch (error) {
             console.error('Error loading profile:', error);
-            setUser(authUser);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -119,7 +120,14 @@ export const AuthProvider = ({ children }) => {
 
         if (error) throw error;
 
-        await loadUserProfile(data.user);
+        // Store the token
+        if (data.session?.access_token) {
+            localStorage.setItem('token', data.session.access_token);
+        }
+
+        // Force page reload immediately - profile will load on page refresh
+        window.location.href = '/';
+
         return data;
     };
 
@@ -152,15 +160,19 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
+        // Clear state first to prevent flicker
+        localStorage.removeItem('token');
+        setUser(null);
+        setProfile(null);
+
         try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+            await supabase.auth.signOut();
         } catch (error) {
             console.error('Logout error:', error);
-        } finally {
-            setUser(null);
-            setProfile(null);
         }
+
+        // Force redirect to login
+        window.location.href = '/login';
     };
 
     const resetPassword = async (email) => {

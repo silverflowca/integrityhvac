@@ -13,16 +13,20 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
         priority: 'warm',
         notes: '',
         callbackDate: '',
-        assignedTo: ''
+        assignedTo: '',
+        campaignId: ''
     });
     const [statuses, setStatuses] = useState([]);
     const [loadingStatuses, setLoadingStatuses] = useState(true);
     const [users, setUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(true);
+    const [campaigns, setCampaigns] = useState([]);
+    const [loadingCampaigns, setLoadingCampaigns] = useState(true);
 
     useEffect(() => {
         fetchStatuses();
         fetchUsers();
+        fetchCampaigns();
     }, []);
 
     useEffect(() => {
@@ -37,7 +41,8 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                 priority: lead.priority || 'warm',
                 notes: lead.notes || '',
                 callbackDate: lead.callbackDate || '',
-                assignedTo: lead.assignedTo || ''
+                assignedTo: lead.assignedTo || '',
+                campaignId: lead.campaignId || ''
             });
         }
     }, [lead]);
@@ -78,6 +83,19 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
             setUsers([]);
         } finally {
             setLoadingUsers(false);
+        }
+    };
+
+    const fetchCampaigns = async () => {
+        try {
+            setLoadingCampaigns(true);
+            const response = await api.getCampaigns();
+            setCampaigns(response.campaigns || []);
+        } catch (error) {
+            console.error('Error fetching campaigns:', error);
+            setCampaigns([]);
+        } finally {
+            setLoadingCampaigns(false);
         }
     };
 
@@ -274,6 +292,27 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                                 )}
                             </select>
                         </div>
+
+                        <div className="form-group">
+                            <label>Campaign</label>
+                            <select
+                                name="campaignId"
+                                value={formData.campaignId}
+                                onChange={handleChange}
+                                disabled={loadingCampaigns}
+                            >
+                                <option value="">No Campaign</option>
+                                {loadingCampaigns ? (
+                                    <option>Loading...</option>
+                                ) : (
+                                    campaigns.map(campaign => (
+                                        <option key={campaign.id} value={campaign.id}>
+                                            {campaign.name}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
                     </div>
 
                     <div className="form-group full-width">
@@ -286,6 +325,15 @@ const LeadForm = ({ lead, onSave, onCancel }) => {
                             placeholder="Add any additional notes or comments..."
                         />
                     </div>
+
+                    {lead && (
+                        <div className="call-stats-section">
+                            <div className="call-stat">
+                                <span className="call-stat-label">Total Calls:</span>
+                                <span className="call-stat-value">{lead.callCount || 0}</span>
+                            </div>
+                        </div>
+                    )}
 
                     {lead && getLastCallInfo() && (
                         <div className="last-call-section">

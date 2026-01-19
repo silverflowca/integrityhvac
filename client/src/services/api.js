@@ -166,6 +166,102 @@ class ApiService {
     async getUsers() {
         return this.request('/users');
     }
+
+    // Campaign endpoints
+    async getCampaigns() {
+        return this.request('/campaigns');
+    }
+
+    async getCampaign(id) {
+        return this.request(`/campaigns/${id}`);
+    }
+
+    async createCampaign(campaignData) {
+        return this.request('/campaigns', {
+            method: 'POST',
+            body: JSON.stringify(campaignData),
+        });
+    }
+
+    async updateCampaign(id, campaignData) {
+        return this.request(`/campaigns/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(campaignData),
+        });
+    }
+
+    async deleteCampaign(id) {
+        return this.request(`/campaigns/${id}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async assignUsersToCampaign(campaignId, userIds) {
+        return this.request(`/campaigns/${campaignId}/users`, {
+            method: 'PUT',  // Use PUT to replace all users
+            body: JSON.stringify({ user_ids: userIds }),
+        });
+    }
+
+    async removeUserFromCampaign(campaignId, userId) {
+        return this.request(`/campaigns/${campaignId}/users/${userId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async assignLeadsToCampaign(campaignId, leadIds) {
+        return this.request(`/campaigns/${campaignId}/leads`, {
+            method: 'POST',
+            body: JSON.stringify({ lead_ids: leadIds }),
+        });
+    }
+
+    async removeLeadFromCampaign(leadId) {
+        return this.request(`/leads/${leadId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ campaign_id: null }),
+        });
+    }
+
+    async bulkAssignLeadsToCampaign(leadIds, campaignId) {
+        return this.request('/leads/bulk-assign-campaign', {
+            method: 'POST',
+            body: JSON.stringify({ leadIds, campaignId }),
+        });
+    }
+
+    // User Management
+    async createUser(userData) {
+        return this.request('/users', {
+            method: 'POST',
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async updateUser(userId, userData) {
+        return this.request(`/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async deleteUser(userId) {
+        return this.request(`/users/${userId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    // Role Management
+    async getRoles() {
+        return this.request('/users/roles/list');
+    }
+
+    async createRole(roleData) {
+        return this.request('/users/roles', {
+            method: 'POST',
+            body: JSON.stringify(roleData),
+        });
+    }
 }
 
 export default new ApiService();

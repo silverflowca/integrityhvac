@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './CSVImport.css';
 import api from '../../services/api';
 
@@ -8,6 +8,72 @@ const CSVImport = () => {
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
     const [preview, setPreview] = useState([]);
+    const [campaigns, setCampaigns] = useState([]);
+    const [selectedCampaign, setSelectedCampaign] = useState('');
+    const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+    const [showNewCampaign, setShowNewCampaign] = useState(false);
+    const [newCampaignName, setNewCampaignName] = useState('');
+    const [creatingCampaign, setCreatingCampaign] = useState(false);
+
+    useEffect(() => {
+        fetchCampaigns();
+    }, []);
+
+    // Warn user if they try to navigate away during import
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            if (importing) {
+                e.preventDefault();
+                e.returnValue = 'Import is in progress. Are you sure you want to leave? Your import will be cancelled.';
+                return e.returnValue;
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [importing]);
+
+    const fetchCampaigns = async () => {
+        try {
+            setLoadingCampaigns(true);
+            const response = await api.getCampaigns();
+            setCampaigns(response.campaigns || []);
+        } catch (err) {
+            console.error('Error fetching campaigns:', err);
+        } finally {
+            setLoadingCampaigns(false);
+        }
+    };
+
+    const handleCreateCampaign = async () => {
+        if (!newCampaignName.trim()) {
+            setError('Please enter a campaign name');
+            return;
+        }
+
+        try {
+            setCreatingCampaign(true);
+            setError(null);
+            const response = await api.createCampaign({
+                name: newCampaignName.trim(),
+                status: 'active'
+            });
+
+            // Refresh campaigns list and select the new one
+            await fetchCampaigns();
+            setSelectedCampaign(response.campaign.id);
+            setNewCampaignName('');
+            setShowNewCampaign(false);
+        } catch (err) {
+            console.error('Error creating campaign:', err);
+            setError('Failed to create campaign: ' + err.message);
+        } finally {
+            setCreatingCampaign(false);
+        }
+    };
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
@@ -92,7 +158,8 @@ const CSVImport = () => {
                             location: contact.address || '',
                             status: contact.status || 'new',
                             priority: 'warm',
-                            notes: contact.description || 'Imported from CSV'
+                            notes: contact.description || 'Imported from CSV',
+                            campaignId: selectedCampaign || null
                         });
                         successCount++;
                     } catch (err) {
@@ -127,8 +194,8 @@ const CSVImport = () => {
     return (
         <div className="csv-import">
             <div className="csv-header">
-                <h3>Import Contacts from CSV</h3>
-                <p>Upload a CSV file with Name and Phone columns to add contacts to your call queue.</p>
+                <h3>Import Leads from CSV</h3>
+                <p>Upload a CSV file with Name and Phone columns to add leads to your call queue.</p>
             </div>
 
             <div className="csv-format-info">
@@ -140,6 +207,63 @@ William,250-574-1462,456 Oak Ave,contacted,Follow up next week</pre>
                     <strong>Required columns:</strong> Name, Phone<br />
                     <strong>Optional columns:</strong> Address, Status, Description
                 </small>
+            </div>
+
+            <div className="csv-campaign-section">
+                <label htmlFor="campaign-select">Assign to Campaign (optional)</label>
+                <div className="campaign-select-row">
+                    <select
+                        id="campaign-select"
+                        value={selectedCampaign}
+                        onChange={(e) => setSelectedCampaign(e.target.value)}
+                        disabled={loadingCampaigns || showNewCampaign}
+                        className="campaign-select"
+                    >
+                        <option value="">No Campaign</option>
+                        {campaigns.map(campaign => (
+                            <option key={campaign.id} value={campaign.id}>
+                                {campaign.name}
+                            </option>
+                        ))}
+                    </select>
+                    <button
+                        type="button"
+                        className="btn-new-campaign"
+                        onClick={() => setShowNewCampaign(!showNewCampaign)}
+                        disabled={creatingCampaign}
+                    >
+                        {showNewCampaign ? 'Cancel' : '+ New'}
+                    </button>
+                </div>
+
+                {showNewCampaign && (
+                    <div className="new-campaign-form">
+                        <input
+                            type="text"
+                            placeholder="Enter new campaign name"
+                            value={newCampaignName}
+                            onChange={(e) => setNewCampaignName(e.target.value)}
+                            disabled={creatingCampaign}
+                            className="new-campaign-input"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleCreateCampaign();
+                                }
+                            }}
+                        />
+                        <button
+                            type="button"
+                            className="btn-create-campaign"
+                            onClick={handleCreateCampaign}
+                            disabled={creatingCampaign || !newCampaignName.trim()}
+                        >
+                            {creatingCampaign ? 'Creating...' : 'Create Campaign'}
+                        </button>
+                    </div>
+                )}
+
+                <small>All imported contacts will be assigned to the selected campaign</small>
             </div>
 
             <div className="csv-upload-section">

@@ -627,3 +627,13 @@
         min-width: 500px;
     }
 }
+
+/* Empty chart state */
+.empty-chart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}

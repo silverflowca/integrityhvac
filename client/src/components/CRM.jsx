@@ -9,6 +9,9 @@ import SipSettings from './common/Settings';
 import Settings from './settings/Settings';
 import IndividualDashboard from './dashboard/IndividualDashboard';
 import AdminDashboard from './dashboard/AdminDashboard';
+import Campaigns from './campaigns/Campaigns';
+import MyLeads from './myleads/MyLeads';
+import UserManagement from './users/UserManagement';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 import '../App.css';
@@ -32,6 +35,7 @@ function CRM() {
     const [filters, setFilters] = useState({
         status: 'all',
         priority: 'all',
+        campaign: 'all',
         sortBy: 'newest',
         groupBy: 'none'
     });
@@ -66,6 +70,15 @@ function CRM() {
         // Apply priority filter
         if (filters.priority !== 'all') {
             result = result.filter(lead => lead.priority === filters.priority);
+        }
+
+        // Apply campaign filter
+        if (filters.campaign !== 'all') {
+            if (filters.campaign === 'unassigned') {
+                result = result.filter(lead => !lead.campaignId);
+            } else {
+                result = result.filter(lead => lead.campaignId === filters.campaign);
+            }
         }
 
         // Apply sorting
@@ -221,6 +234,18 @@ function CRM() {
         }
     };
 
+    const handleUpdateCampaign = async (leadId, campaignId) => {
+        try {
+            // Campaign updates should preserve current page
+            preservePageRef.current = true;
+            await api.updateLead(leadId, { campaignId: campaignId });
+            await fetchLeads();
+        } catch (err) {
+            console.error('Error updating campaign:', err);
+            alert('Failed to update campaign. Please try again.');
+        }
+    };
+
     const handleCancelForm = () => {
         setShowForm(false);
         setEditingLead(null);
@@ -276,6 +301,7 @@ function CRM() {
                     onEditLead={handleEditLead}
                     onDeleteLead={handleDeleteLead}
                     onUpdateStatus={handleUpdateStatus}
+                    onUpdateCampaign={handleUpdateCampaign}
                     onCall={handleCall}
                     currentPage={currentPageState}
                     onPageChange={setCurrentPageState}
@@ -302,6 +328,7 @@ function CRM() {
                                 onEditLead={handleEditLead}
                                 onDeleteLead={handleDeleteLead}
                                 onUpdateStatus={handleUpdateStatus}
+                                onUpdateCampaign={handleUpdateCampaign}
                                 onCall={handleCall}
                                 currentPage={currentPageState}
                                 onPageChange={setCurrentPageState}
@@ -364,6 +391,49 @@ function CRM() {
                         />
                         <div className="content-area">
                             <Settings />
+                        </div>
+                    </>
+                ) : activeView === 'campaigns' ? (
+                    <>
+                        <Topbar
+                            title="Campaigns"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <Campaigns />
+                        </div>
+                    </>
+                ) : activeView === 'my-leads' ? (
+                    <>
+                        <Topbar
+                            title="My Leads"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <MyLeads
+                                onEditLead={handleEditLead}
+                                onDeleteLead={handleDeleteLead}
+                                onCall={handleCall}
+                            />
+                        </div>
+                    </>
+                ) : activeView === 'users' ? (
+                    <>
+                        <Topbar
+                            title="User Management"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <UserManagement />
                         </div>
                     </>
                 ) : (
