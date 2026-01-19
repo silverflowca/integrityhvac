@@ -13,6 +13,7 @@ import statusRoutes from './routes/statuses.js';
 import userRoutes from './routes/users.js';
 import leadsRoutes from './routes/leads.js';
 import campaignsRoutes from './routes/campaigns.js';
+import debugRoutes from './routes/debug.js';
 import supabase from './config/supabase.js';
 import { authenticateToken } from './middleware/auth.js';
 
@@ -54,6 +55,9 @@ app.use('/api/leads', authenticateToken, leadsRoutes);
 
 // Campaigns routes (protected)
 app.use('/api/campaigns', authenticateToken, campaignsRoutes);
+
+// Debug routes (public - for debugging only)
+app.use('/api/debug', debugRoutes);
 
 // Health check (public)
 app.get('/api/health', (req, res) => {

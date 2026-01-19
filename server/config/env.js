@@ -16,8 +16,13 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Check if we're in a cloud environment (Railway sets RAILWAY_ENVIRONMENT)
-const isCloudEnvironment = process.env.RAILWAY_ENVIRONMENT ||
+// Check if we're in a cloud environment
+// Railway might not set RAILWAY_ENVIRONMENT, but always sets these:
+const isCloudEnvironment = process.env.NODE_ENV === 'staging' ||
+                          process.env.NODE_ENV === 'production' ||
+                          process.env.RAILWAY_ENVIRONMENT ||
+                          process.env.RAILWAY_STATIC_URL ||
+                          process.env.RAILWAY_SERVICE_ID ||
                           process.env.RENDER ||
                           process.env.VERCEL ||
                           process.env.HEROKU_APP_NAME;
