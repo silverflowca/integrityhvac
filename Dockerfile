@@ -31,8 +31,11 @@ RUN mkdir -p /app/data && \
     chmod -R 755 /app/data && \
     chmod +x /app/entrypoint.sh
 
-# Expose port 8677
+# Expose port (Railway will override with its own PORT)
 EXPOSE 8677
 
-# Use entrypoint script to initialize data files (runs as root, then switches to node user)
+# Debug: Show what's in the container at build time
+RUN echo "📦 Docker build complete" && ls -la /app
+
+# Use entrypoint script to initialize data files and start server
 ENTRYPOINT ["/app/entrypoint.sh"]

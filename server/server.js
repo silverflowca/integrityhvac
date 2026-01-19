@@ -1,6 +1,13 @@
 // IMPORTANT: Load environment variables FIRST before any other imports
 import './config/env.js';
 
+// Debug: Log what env.js loaded
+console.log('🔍 After env.js import in server.js:');
+console.log('  NODE_ENV:', process.env.NODE_ENV || 'NOT SET');
+console.log('  SUPABASE_URL:', process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 30) + '...' : 'NOT SET');
+console.log('  SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'SET (length: ' + process.env.SUPABASE_SERVICE_KEY.length + ')' : 'NOT SET');
+console.log('');
+
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
