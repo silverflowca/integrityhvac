@@ -13,14 +13,14 @@ class ApiService {
             if (hostname === 'localhost' || hostname === '127.0.0.1') {
                 // If running on Vite dev server (port 5173 or 3000), use local backend
                 if (port === '5173' || port === '3000') {
-                    return 'http://localhost:3003/api';
+                    return 'http://localhost:3004/api';
                 }
                 // If running on Docker port (8677), use Docker backend
                 if (port === '8677') {
                     return '/api';
                 }
                 // Default to local backend for development
-                return 'http://localhost:3003/api';
+                return 'http://localhost:3004/api';
             }
         }
 
@@ -102,27 +102,17 @@ class ApiService {
         return this.request('/stats');
     }
 
-    // Auth endpoints
-    async login(email, password) {
-        return this.request('/auth/login', {
-            method: 'POST',
-            body: JSON.stringify({ email, password })
-        });
-    }
-
-    async logout() {
-        return this.request('/auth/logout', { method: 'POST' });
-    }
-
-    async register(userData) {
-        return this.request('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify(userData)
-        });
-    }
-
+    // Auth endpoints - now handled by Supabase directly in AuthContext
+    // Backend /auth/me endpoint fetches user profile from database
     async getCurrentUser() {
         return this.request('/auth/me');
+    }
+
+    async updateUserProfile(userData) {
+        return this.request('/auth/me', {
+            method: 'PUT',
+            body: JSON.stringify(userData)
+        });
     }
 
     // Dashboard endpoints

@@ -1,132 +1,45 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
 import supabase from '../config/supabase.js';
-import { generateToken, authenticateToken } from '../middleware/auth.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 /**
- * Register new user
- */
-router.post('/register', async (req, res) => {
-    try {
-        const { email, password, name } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: 'Email and password required' });
-        }
-
-        // Check if user already exists
-        const { data: existingUsers, error: checkError } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', email)
-            .limit(1);
-
-        if (checkError) throw checkError;
-
-        if (existingUsers && existingUsers.length > 0) {
-            return res.status(400).json({ success: false, error: 'User already exists' });
-        }
-
-        // Hash password
-        const passwordHash = await bcrypt.hash(password, 10);
-
-        // Create new user
-        const { data: newUser, error: insertError } = await supabase
-            .from('users')
-            .insert({
-                email,
-                password_hash: passwordHash,
-                name: name || email.split('@')[0],
-                role: 'user'
-            })
-            .select()
-            .single();
-
-        if (insertError) throw insertError;
-
-        // Generate token
-        const token = generateToken(newUser);
-
-        // Return user without password
-        const { password_hash, ...userWithoutPassword } = newUser;
-
-        res.status(201).json({
-            success: true,
-            token,
-            user: userWithoutPassword
-        });
-    } catch (error) {
-        console.error('Registration error:', error);
-        res.status(500).json({ success: false, error: 'Registration failed' });
-    }
-});
-
-/**
- * Login
- */
-router.post('/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: 'Email and password required' });
-        }
-
-        // Find user by email
-        const { data: users, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .limit(1);
-
-        if (error) throw error;
-
-        if (!users || users.length === 0) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
-        }
-
-        const user = users[0];
-
-        // Verify password
-        const validPassword = await bcrypt.compare(password, user.password_hash);
-
-        if (!validPassword) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
-        }
-
-        // Generate token
-        const token = generateToken(user);
-
-        // Return user without password
-        const { password_hash, ...userWithoutPassword } = user;
-
-        res.json({
-            success: true,
-            token,
-            user: userWithoutPassword
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: 'Login failed' });
-    }
-});
-
-/**
- * Get current user (protected route)
+ * Get current user profile (protected route)
+ * Frontend manages auth via Supabase client, backend just fetches user data
  */
 router.get('/me', authenticateToken, async (req, res) => {
     try {
+        // req.user comes from Supabase Auth (has id, email, etc.)
+        const userId = req.user.id;
+
+        // Fetch user profile from users table
         const { data: user, error } = await supabase
             .from('users')
             .select('id, email, name, role, created_at, updated_at')
-            .eq('id', req.user.id)
+            .eq('id', userId)
             .single();
 
         if (error) {
+            // If user doesn't exist in users table yet, create it
             if (error.code === 'PGRST116') {
-                return res.status(404).json({ success: false, error: 'User not found' });
+                const { data: newUser, error: insertError } = await supabase
+                    .from('users')
+                    .insert({
+                        id: userId,
+                        email: req.user.email,
+                        name: req.user.user_metadata?.name || req.user.email.split('@')[0],
+                        role: 'user'
+                    })
+                    .select('id, email, name, role, created_at, updated_at')
+                    .single();
+
+                if (insertError) throw insertError;
+
+                return res.json({
+                    success: true,
+                    user: newUser
+                });
             }
             throw error;
         }
@@ -142,10 +55,30 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 /**
- * Logout (client-side token removal)
+ * Update user profile (protected route)
  */
-router.post('/logout', authenticateToken, (req, res) => {
-    res.json({ success: true, message: 'Logged out successfully' });
+router.put('/me', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name } = req.body;
+
+        const { data: user, error } = await supabase
+            .from('users')
+            .update({ name })
+            .eq('id', userId)
+            .select('id, email, name, role, created_at, updated_at')
+            .single();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            user
+        });
+    } catch (error) {
+        console.error('Update user error:', error);
+        res.status(500).json({ success: false, error: 'Failed to update user' });
+    }
 });
 
 export default router;

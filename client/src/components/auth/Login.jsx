@@ -7,18 +7,29 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [isSignup, setIsSignup] = useState(false);
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
     const [loading, setLoading] = useState(false);
-    const { login, register } = useAuth();
+    const { login, register, resetPassword } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
         setLoading(true);
 
         try {
-            if (isSignup) {
+            if (isForgotPassword) {
+                await resetPassword(email);
+                setSuccess('Password reset email sent! Check your inbox.');
+                setTimeout(() => {
+                    setIsForgotPassword(false);
+                    setSuccess('');
+                }, 3000);
+            } else if (isSignup) {
                 await register({ email, password, name });
+                setSuccess('Account created! You may need to verify your email.');
             } else {
                 await login(email, password);
             }
@@ -31,7 +42,18 @@ const Login = () => {
 
     const toggleMode = () => {
         setIsSignup(!isSignup);
+        setIsForgotPassword(false);
         setError('');
+        setSuccess('');
+        setName('');
+    };
+
+    const toggleForgotPassword = () => {
+        setIsForgotPassword(!isForgotPassword);
+        setIsSignup(false);
+        setError('');
+        setSuccess('');
+        setPassword('');
         setName('');
     };
 
@@ -49,10 +71,14 @@ const Login = () => {
                     <p>Cold Calling CRM System</p>
                 </div>
 
-                <h2>{isSignup ? 'Create Account' : 'Welcome Back'}</h2>
+                <h2>
+                    {isForgotPassword
+                        ? 'Reset Password'
+                        : (isSignup ? 'Create Account' : 'Welcome Back')}
+                </h2>
 
                 <form onSubmit={handleSubmit} className="login-form">
-                    {isSignup && (
+                    {isSignup && !isForgotPassword && (
                         <div className="form-group">
                             <label>Name</label>
                             <input
@@ -76,16 +102,18 @@ const Login = () => {
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                            required
-                        />
-                    </div>
+                    {!isForgotPassword && (
+                        <div className="form-group">
+                            <label>Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter your password"
+                                required
+                            />
+                        </div>
+                    )}
 
                     {error && (
                         <div className="error-message">
@@ -93,16 +121,43 @@ const Login = () => {
                         </div>
                     )}
 
+                    {success && (
+                        <div className="success-message">
+                            ✅ {success}
+                        </div>
+                    )}
+
                     <button type="submit" className="btn-submit" disabled={loading}>
-                        {loading ? 'Please wait...' : (isSignup ? 'Create Account' : 'Sign In')}
+                        {loading ? 'Please wait...' : (
+                            isForgotPassword ? 'Send Reset Link' :
+                            (isSignup ? 'Create Account' : 'Sign In')
+                        )}
                     </button>
                 </form>
 
-                <button className="btn-toggle" onClick={toggleMode}>
-                    {isSignup
-                        ? 'Already have an account? Sign In'
-                        : 'Need an account? Sign Up'}
-                </button>
+                <div className="login-footer">
+                    {!isForgotPassword && (
+                        <>
+                            <button className="btn-toggle" onClick={toggleMode}>
+                                {isSignup
+                                    ? 'Already have an account? Sign In'
+                                    : 'Need an account? Sign Up'}
+                            </button>
+
+                            {!isSignup && (
+                                <button className="btn-link" onClick={toggleForgotPassword}>
+                                    Forgot Password?
+                                </button>
+                            )}
+                        </>
+                    )}
+
+                    {isForgotPassword && (
+                        <button className="btn-toggle" onClick={toggleForgotPassword}>
+                            ← Back to Sign In
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
