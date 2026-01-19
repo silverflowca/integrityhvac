@@ -3,6 +3,18 @@
 -- Version: 1.0.0
 -- Run this on: STAGING and PRODUCTION Supabase instances
 -- ============================================================================
+--
+-- !! IMPORTANT - MANUAL STEP REQUIRED !!
+-- After running this SQL, you MUST expose the schema in the Supabase Dashboard:
+--
+-- 1. Go to: Supabase Dashboard > Settings > API
+-- 2. Find "Exposed schemas" section
+-- 3. Add "integrityhvac" to the list
+-- 4. Click Save
+--
+-- The ALTER ROLE commands below set default search paths but do NOT expose
+-- the schema to the PostgREST API. That must be done in the dashboard.
+-- ============================================================================
 
 -- ============================================================================
 -- STEP 1: CREATE SCHEMA
@@ -10,8 +22,11 @@
 CREATE SCHEMA IF NOT EXISTS integrityhvac;
 
 -- ============================================================================
--- STEP 2: EXPOSE SCHEMA TO API
+-- STEP 2: SET SEARCH PATHS (Note: This does NOT expose schema to API)
 -- ============================================================================
+-- These commands set the default search path for database sessions
+-- but do NOT expose the schema to the Supabase REST API.
+-- You must ALSO add 'integrityhvac' to exposed schemas in the Dashboard.
 ALTER ROLE anon SET search_path TO public, integrityhvac;
 ALTER ROLE authenticated SET search_path TO public, integrityhvac;
 ALTER ROLE service_role SET search_path TO public, integrityhvac;
@@ -277,3 +292,14 @@ END $$;
 
 -- Return success
 SELECT 'IntegrityHVAC migration completed successfully!' as status;
+
+-- ============================================================================
+-- REMINDER: MANUAL STEP REQUIRED
+-- ============================================================================
+-- After running this SQL, go to your Supabase Dashboard:
+--   1. Project Settings > API
+--   2. Under "Exposed schemas", add "integrityhvac"
+--   3. Save changes
+--
+-- Without this step, you will get "Invalid schema: integrityhvac" errors.
+-- ============================================================================

@@ -6,8 +6,8 @@ const Settings = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState('sip');
     const [settings, setSettings] = useState({
         sipServer: 'avr.silverflow.ca',
-        extension: '1002',
-        password: '1002'
+        extension: '7823582100',
+        password: '30222100'
     });
     const [isSaved, setIsSaved] = useState(false);
 
@@ -39,8 +39,8 @@ const Settings = ({ onClose }) => {
     const handleReset = () => {
         const defaultSettings = {
             sipServer: 'avr.silverflow.ca',
-            extension: '1002',
-            password: '1002'
+            extension: '7823582100',
+            password: '30222100'
         };
         setSettings(defaultSettings);
         localStorage.setItem('sipSettings', JSON.stringify(defaultSettings));

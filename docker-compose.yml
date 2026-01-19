@@ -4,8 +4,8 @@ services:
     container_name: integrityhvac-crm
     ports:
       - "8677:8677"
-    # env_file:
-      # - ./server/.env.production
+    env_file:
+      - ./server/.env.production
     environment:
       - PORT=8677
       - NODE_ENV=production
