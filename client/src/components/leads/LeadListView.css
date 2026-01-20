@@ -548,3 +548,26 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+/* Checkbox cell styles */
+.checkbox-cell {
+    width: 40px;
+    text-align: center;
+    padding: 12px 8px !important;
+}
+
+.checkbox-cell input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #4fd1c5;
+}
+
+/* Selected row highlight */
+.lead-row.selected {
+    background-color: rgba(79, 209, 197, 0.1) !important;
+}
+
+.lead-row.selected:hover {
+    background-color: rgba(79, 209, 197, 0.15) !important;
+}

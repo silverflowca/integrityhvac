@@ -262,6 +262,21 @@ class ApiService {
             body: JSON.stringify(roleData),
         });
     }
+
+    // Bulk Lead Actions
+    async bulkAction(data) {
+        return this.request('/leads/bulk-action', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    }
+
+    async bulkCount(filters) {
+        return this.request('/leads/bulk-count', {
+            method: 'POST',
+            body: JSON.stringify({ filters }),
+        });
+    }
 }
 
 export default new ApiService();

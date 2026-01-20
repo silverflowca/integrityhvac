@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import BulkActionToolbar from './BulkActionToolbar';
+import BulkActionModal from './BulkActionModal';
 import './LeadListView.css';
+
+const BULK_THRESHOLD = 250;
 
 const STATUS_COLORS = {
     new: '#0ea5e9',
@@ -22,23 +26,36 @@ const PRIORITY_COLORS = {
     cold: '#06b6d4'
 };
 
-const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdateCampaign, onCall, currentPage: externalPage, onPageChange: externalPageChange }) => {
+const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdateCampaign, onCall, currentPage: externalPage, onPageChange: externalPageChange, onRefresh }) => {
     const [internalPage, setInternalPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
     const [statuses, setStatuses] = useState([]);
     const [campaigns, setCampaigns] = useState([]);
+    const [users, setUsers] = useState([]);
     const [sortField, setSortField] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
+
+    // Bulk selection state
+    const [selectedLeads, setSelectedLeads] = useState(new Set());
+    const [bulkModalOpen, setBulkModalOpen] = useState(false);
+    const [bulkAction, setBulkAction] = useState(null);
+    const [isServerSideMode, setIsServerSideMode] = useState(false);
 
     // Use external page if provided, otherwise use internal state
     const currentPage = externalPage !== undefined ? externalPage : internalPage;
     const setCurrentPage = externalPageChange || setInternalPage;
 
-    // Fetch statuses and campaigns on mount
+    // Fetch statuses, campaigns, and users on mount
     useEffect(() => {
         fetchStatuses();
         fetchCampaigns();
+        fetchUsers();
     }, []);
+
+    // Clear selection when leads change
+    useEffect(() => {
+        setSelectedLeads(new Set());
+    }, [leads]);
 
     // Reset to page 1 only when itemsPerPage changes
     useEffect(() => {
@@ -75,6 +92,89 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdat
         } catch (error) {
             console.error('Error fetching campaigns:', error);
             setCampaigns([]);
+        }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const response = await api.getUsers();
+            setUsers(response.users || []);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            setUsers([]);
+        }
+    };
+
+    // Bulk selection handlers
+    const handleSelectLead = (leadId) => {
+        const newSelected = new Set(selectedLeads);
+        if (newSelected.has(leadId)) {
+            newSelected.delete(leadId);
+        } else {
+            newSelected.add(leadId);
+        }
+        setSelectedLeads(newSelected);
+    };
+
+    const handleSelectAll = () => {
+        if (leads.length <= BULK_THRESHOLD) {
+            const allIds = new Set(leads.map(l => l.id));
+            setSelectedLeads(allIds);
+        }
+    };
+
+    const handleSelectPage = () => {
+        const pageIds = paginatedLeads.map(l => l.id);
+        const newSelected = new Set(selectedLeads);
+        pageIds.forEach(id => newSelected.add(id));
+        setSelectedLeads(newSelected);
+    };
+
+    const handleClearSelection = () => {
+        setSelectedLeads(new Set());
+        setIsServerSideMode(false);
+    };
+
+    const handleBulkAction = (action) => {
+        setBulkAction(action);
+        setBulkModalOpen(true);
+    };
+
+    const handleOpenBulkModal = () => {
+        setIsServerSideMode(true);
+        setBulkModalOpen(true);
+    };
+
+    const handleBulkSuccess = (result) => {
+        setSelectedLeads(new Set());
+        setIsServerSideMode(false);
+        setBulkModalOpen(false);
+        setBulkAction(null);
+        // Refresh leads list
+        if (onRefresh) {
+            onRefresh();
+        }
+        alert(`Success: ${result.message}`);
+    };
+
+    const isAllPageSelected = () => {
+        return paginatedLeads.length > 0 && paginatedLeads.every(l => selectedLeads.has(l.id));
+    };
+
+    const isSomePageSelected = () => {
+        return paginatedLeads.some(l => selectedLeads.has(l.id)) && !isAllPageSelected();
+    };
+
+    const handleHeaderCheckboxChange = () => {
+        if (isAllPageSelected()) {
+            // Deselect all on current page
+            const pageIds = paginatedLeads.map(l => l.id);
+            const newSelected = new Set(selectedLeads);
+            pageIds.forEach(id => newSelected.delete(id));
+            setSelectedLeads(newSelected);
+        } else {
+            // Select all on current page
+            handleSelectPage();
         }
     };
 
@@ -262,10 +362,30 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdat
 
     return (
         <div className="list-view-container">
+            <BulkActionToolbar
+                selectedCount={selectedLeads.size}
+                totalCount={leads.length}
+                onSelectAll={handleSelectAll}
+                onClearSelection={handleClearSelection}
+                onBulkAction={handleBulkAction}
+                isServerSideMode={isServerSideMode}
+                onOpenBulkModal={handleOpenBulkModal}
+            />
             <PaginationControls />
             <table className="leads-table">
                 <thead>
                     <tr>
+                        <th className="checkbox-cell">
+                            <input
+                                type="checkbox"
+                                checked={isAllPageSelected()}
+                                ref={el => {
+                                    if (el) el.indeterminate = isSomePageSelected();
+                                }}
+                                onChange={handleHeaderCheckboxChange}
+                                title={isAllPageSelected() ? "Deselect page" : "Select page"}
+                            />
+                        </th>
                         <th>Status</th>
                         <th>Name</th>
                         <th>Company</th>
@@ -288,7 +408,14 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdat
                 </thead>
                 <tbody>
                     {paginatedLeads.map((lead) => (
-                        <tr key={lead.id} className="lead-row">
+                        <tr key={lead.id} className={`lead-row ${selectedLeads.has(lead.id) ? 'selected' : ''}`}>
+                            <td className="checkbox-cell">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedLeads.has(lead.id)}
+                                    onChange={() => handleSelectLead(lead.id)}
+                                />
+                            </td>
                             <td className="status-dot-cell">
                                 <span
                                     className="status-dot"
@@ -384,6 +511,24 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdat
                 </tbody>
             </table>
             <PaginationControls />
+
+            <BulkActionModal
+                isOpen={bulkModalOpen}
+                onClose={() => {
+                    setBulkModalOpen(false);
+                    setBulkAction(null);
+                    setIsServerSideMode(false);
+                }}
+                action={bulkAction}
+                selectedLeadIds={Array.from(selectedLeads)}
+                filters={{}}
+                isServerSideMode={isServerSideMode}
+                matchingCount={leads.length}
+                onSuccess={handleBulkSuccess}
+                campaigns={campaigns}
+                statuses={statuses}
+                users={users}
+            />
         </div>
     );
 };

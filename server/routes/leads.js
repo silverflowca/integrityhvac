@@ -400,4 +400,212 @@ router.post('/bulk-assign-campaign', async (req, res) => {
     }
 });
 
+/**
+ * Bulk action on leads (filter-based for large datasets)
+ * Supports: move_campaign, change_status, change_priority, assign_user, delete
+ */
+router.post('/bulk-action', async (req, res) => {
+    try {
+        const { filters, action, leadIds, targetValue } = req.body;
+
+        if (!action) {
+            return res.status(400).json({ success: false, error: 'Action is required' });
+        }
+
+        // If specific leadIds provided (client-side selection < 250)
+        if (leadIds && Array.isArray(leadIds) && leadIds.length > 0) {
+            // For delete action
+            if (action === 'delete') {
+                const { error } = await supabase
+                    .from('leads')
+                    .delete()
+                    .in('id', leadIds);
+
+                if (error) throw error;
+
+                return res.json({
+                    success: true,
+                    message: `Deleted ${leadIds.length} leads`,
+                    count: leadIds.length
+                });
+            }
+
+            // For update actions
+            let updateData = {};
+            switch (action) {
+                case 'move_campaign':
+                    updateData.campaign_id = targetValue || null;
+                    break;
+                case 'change_status':
+                    updateData.status = targetValue;
+                    break;
+                case 'change_priority':
+                    updateData.priority = targetValue || null;
+                    break;
+                case 'assign_user':
+                    updateData.assigned_to = targetValue || null;
+                    break;
+                default:
+                    return res.status(400).json({ success: false, error: 'Invalid action' });
+            }
+
+            const { data, error } = await supabase
+                .from('leads')
+                .update(updateData)
+                .in('id', leadIds)
+                .select();
+
+            if (error) throw error;
+
+            return res.json({
+                success: true,
+                message: `Updated ${data.length} leads`,
+                count: data.length
+            });
+        }
+
+        // Filter-based bulk action (server-side for > 250 leads)
+        if (filters) {
+            // First, get IDs of matching leads
+            let countQuery = supabase.from('leads').select('id');
+
+            if (filters.campaign_id !== undefined) {
+                if (filters.campaign_id === null || filters.campaign_id === '') {
+                    countQuery = countQuery.is('campaign_id', null);
+                } else {
+                    countQuery = countQuery.eq('campaign_id', filters.campaign_id);
+                }
+            }
+            if (filters.status) {
+                countQuery = countQuery.eq('status', filters.status);
+            }
+            if (filters.priority) {
+                countQuery = countQuery.eq('priority', filters.priority);
+            }
+            if (filters.assigned_to !== undefined) {
+                if (filters.assigned_to === null || filters.assigned_to === '') {
+                    countQuery = countQuery.is('assigned_to', null);
+                } else {
+                    countQuery = countQuery.eq('assigned_to', filters.assigned_to);
+                }
+            }
+
+            const { data: matchingLeads, error: countError } = await countQuery;
+
+            if (countError) throw countError;
+
+            if (!matchingLeads || matchingLeads.length === 0) {
+                return res.json({
+                    success: true,
+                    message: 'No leads match the specified filters',
+                    count: 0
+                });
+            }
+
+            const matchingIds = matchingLeads.map(l => l.id);
+
+            // For delete action
+            if (action === 'delete') {
+                const { error } = await supabase
+                    .from('leads')
+                    .delete()
+                    .in('id', matchingIds);
+
+                if (error) throw error;
+
+                return res.json({
+                    success: true,
+                    message: `Deleted ${matchingIds.length} leads`,
+                    count: matchingIds.length
+                });
+            }
+
+            // For update actions
+            let updateData = {};
+            switch (action) {
+                case 'move_campaign':
+                    updateData.campaign_id = targetValue || null;
+                    break;
+                case 'change_status':
+                    updateData.status = targetValue;
+                    break;
+                case 'change_priority':
+                    updateData.priority = targetValue || null;
+                    break;
+                case 'assign_user':
+                    updateData.assigned_to = targetValue || null;
+                    break;
+                default:
+                    return res.status(400).json({ success: false, error: 'Invalid action' });
+            }
+
+            const { data, error } = await supabase
+                .from('leads')
+                .update(updateData)
+                .in('id', matchingIds)
+                .select();
+
+            if (error) throw error;
+
+            return res.json({
+                success: true,
+                message: `Updated ${data.length} leads`,
+                count: data.length
+            });
+        }
+
+        return res.status(400).json({ success: false, error: 'Either leadIds or filters are required' });
+
+    } catch (error) {
+        console.error('Error performing bulk action:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * Get count of leads matching filters (for preview)
+ */
+router.post('/bulk-count', async (req, res) => {
+    try {
+        const { filters } = req.body;
+
+        let query = supabase.from('leads').select('id');
+
+        if (filters) {
+            if (filters.campaign_id !== undefined) {
+                if (filters.campaign_id === null || filters.campaign_id === '') {
+                    query = query.is('campaign_id', null);
+                } else {
+                    query = query.eq('campaign_id', filters.campaign_id);
+                }
+            }
+            if (filters.status) {
+                query = query.eq('status', filters.status);
+            }
+            if (filters.priority) {
+                query = query.eq('priority', filters.priority);
+            }
+            if (filters.assigned_to !== undefined) {
+                if (filters.assigned_to === null || filters.assigned_to === '') {
+                    query = query.is('assigned_to', null);
+                } else {
+                    query = query.eq('assigned_to', filters.assigned_to);
+                }
+            }
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            count: data?.length || 0
+        });
+    } catch (error) {
+        console.error('Error counting leads:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 export default router;
