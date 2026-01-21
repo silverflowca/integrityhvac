@@ -8,11 +8,26 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
     const [callDuration, setCallDuration] = useState(0);
     const [notes, setNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [statuses, setStatuses] = useState([]);
+    const [selectedStatus, setSelectedStatus] = useState('');
     const sessionRef = useRef(null);
     const uaRef = useRef(null);
     const timerRef = useRef(null);
     const remoteAudioRef = useRef(null);
     const callStartTimeRef = useRef(null);
+
+    // Fetch statuses on mount
+    useEffect(() => {
+        const fetchStatuses = async () => {
+            try {
+                const response = await api.getStatuses();
+                setStatuses(response.statuses || []);
+            } catch (error) {
+                console.error('Error fetching statuses:', error);
+            }
+        };
+        fetchStatuses();
+    }, []);
 
     // Load SIP configuration from localStorage or use defaults
     const getSipConfig = () => {
@@ -230,7 +245,7 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
             finalDuration = elapsedSeconds;
         }
 
-        if (!notes.trim() && finalDuration === 0) {
+        if (!notes.trim() && finalDuration === 0 && !selectedStatus) {
             return; // Nothing to save
         }
 
@@ -243,6 +258,12 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
                 duration: finalDuration,
                 notes: notes.trim() || `Called ${phoneNumber}`
             });
+
+            // Update lead status if one was selected
+            if (selectedStatus && leadId) {
+                await api.updateLead(leadId, { status: selectedStatus });
+                console.log('Lead status updated to:', selectedStatus);
+            }
 
             // If there are notes and a callback, notify parent
             if (notes.trim() && onNoteSaved) {
@@ -258,8 +279,8 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
     };
 
     const handleHangup = async () => {
-        // Save notes before closing if there are any
-        if ((notes.trim() || callDuration > 0) && leadId) {
+        // Save notes and status before closing if there are any
+        if ((notes.trim() || callDuration > 0 || selectedStatus) && leadId) {
             await saveCallNotes();
         }
 
@@ -364,6 +385,29 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
                     </div>
                 </div>
 
+                {/* Lead Status Section */}
+                <div className="call-status-section">
+                    <label htmlFor="lead-status" className="status-label">
+                        Set Lead Status
+                    </label>
+                    <select
+                        id="lead-status"
+                        className="status-select"
+                        value={selectedStatus}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                    >
+                        <option value="">-- No Change --</option>
+                        {statuses.map(status => (
+                            <option
+                                key={status.id}
+                                value={status.name.toLowerCase().replace(/\s+/g, '_')}
+                            >
+                                {status.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 {/* Call Notes Section */}
                 <div className="call-notes-section">
                     <label htmlFor="call-notes" className="notes-label">
@@ -378,7 +422,7 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
                         rows={4}
                     />
                     <div className="notes-hint">
-                        Notes will be saved automatically when you end the call
+                        Notes and status will be saved automatically when you end the call
                     </div>
                 </div>
 

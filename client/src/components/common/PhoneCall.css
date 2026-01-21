@@ -76,6 +76,52 @@
     display: inline-block;
 }
 
+/* Lead Status Section */
+.call-status-section {
+    margin-bottom: 16px;
+}
+
+.status-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.status-select option {
+    background: #4a5568;
+    color: white;
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.2);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
 /* Call Notes Section */
 .call-notes-section {
     margin-bottom: 24px;
@@ -225,6 +271,15 @@
     .call-duration {
         font-size: 18px;
         padding: 6px 12px;
+    }
+
+    .call-status-section {
+        margin-bottom: 12px;
+    }
+
+    .status-select {
+        padding: 10px;
+        font-size: 14px;
     }
 
     .call-notes-section {
