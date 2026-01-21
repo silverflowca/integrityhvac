@@ -200,9 +200,23 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdat
         onUpdateStatus(leadId, newStatus);
     };
 
-    const handleCall = (phoneNumber, leadId) => {
-        if (phoneNumber) {
-            onCall(phoneNumber, leadId);
+    const handleCall = async (phoneNumber, leadId) => {
+        if (!phoneNumber) return;
+
+        try {
+            // Try to acquire lock before calling
+            const response = await api.acquireLeadLock(leadId);
+            if (response.success) {
+                onCall(phoneNumber, leadId);
+            }
+        } catch (error) {
+            if (error.message.includes('being dialed') || error.message.includes('locked')) {
+                alert('This lead is currently being dialed by another user');
+            } else {
+                console.error('Error acquiring lock:', error);
+                // Still allow call if lock check fails (graceful degradation)
+                onCall(phoneNumber, leadId);
+            }
         }
     };
 

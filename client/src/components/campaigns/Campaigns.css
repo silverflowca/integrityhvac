@@ -48,13 +48,18 @@
 .campaign-card {
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
-    padding: 12px 16px;
-    cursor: pointer;
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.campaign-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    padding: 14px 16px;
+    cursor: pointer;
 }
 
 .campaign-card:last-child {
@@ -80,12 +85,28 @@
 
 .campaign-card-header h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Unassigned campaign special styling */
+.campaign-unassigned {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.campaign-unassigned .campaign-card-header h3 {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.status-badge.status-unassigned {
+    background: #f3f4f6;
+    color: #6b7280;
 }
 
 .status-badge {
@@ -147,10 +168,110 @@
     text-transform: lowercase;
 }
 
+.campaign-stats .stat-won .stat-value {
+    color: #059669;
+}
+
+/* Expand button */
+.btn-expand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+}
+
+.btn-expand:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Campaign users dropdown */
+.campaign-users-dropdown {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    padding: 12px 16px;
+}
+
+.users-dropdown-header {
+    display: grid;
+    grid-template-columns: 1fr 70px 70px;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.user-stat-row {
+    display: grid;
+    grid-template-columns: 1fr 70px 70px;
+    gap: 8px;
+    padding: 8px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-stat-row:last-child {
+    border-bottom: none;
+}
+
+.user-stat-row .user-name {
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-stat-row .user-assigned,
+.user-stat-row .user-called {
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.campaign-card.expanded {
+    background: var(--bg-primary);
+}
+
 .campaign-actions {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-shrink: 0;
+}
+
+/* Icon buttons */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: var(--bg-tertiary);
+}
+
+.btn-icon-danger:hover {
+    background: #fee2e2;
 }
 
 .empty-state {
@@ -267,7 +388,7 @@
         padding: 16px;
     }
 
-    .campaign-card {
+    .campaign-row {
         flex-wrap: wrap;
         padding: 12px;
         gap: 10px;
@@ -278,7 +399,7 @@
     }
 
     .campaign-card-header h3 {
-        font-size: 14px;
+        font-size: 15px;
     }
 
     .campaign-description {
@@ -315,7 +436,7 @@
 }
 
 @media (max-width: 480px) {
-    .campaign-card {
+    .campaign-row {
         padding: 10px;
     }
 
@@ -323,5 +444,15 @@
         flex-direction: column;
         gap: 2px;
         text-align: center;
+    }
+
+    .users-dropdown-header,
+    .user-stat-row {
+        grid-template-columns: 1fr 50px 50px;
+        font-size: 11px;
+    }
+
+    .campaign-users-dropdown {
+        padding: 10px 12px;
     }
 }

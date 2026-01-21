@@ -176,6 +176,18 @@ class ApiService {
         return this.request(`/campaigns/${id}`);
     }
 
+    async getCampaignLeads(campaignId, page = 1, limit = 50) {
+        return this.request(`/campaigns/${campaignId}/leads?page=${page}&limit=${limit}`);
+    }
+
+    async getUnassignedLeadsCount() {
+        return this.request('/campaigns/unassigned-count');
+    }
+
+    async getUnassignedLeads(page = 1, limit = 50) {
+        return this.request(`/campaigns/unassigned/leads?page=${page}&limit=${limit}`);
+    }
+
     async createCampaign(campaignData) {
         return this.request('/campaigns', {
             method: 'POST',
@@ -224,10 +236,28 @@ class ApiService {
     }
 
     async bulkAssignLeadsToCampaign(leadIds, campaignId) {
-        return this.request('/leads/bulk-assign-campaign', {
-            method: 'POST',
-            body: JSON.stringify({ leadIds, campaignId }),
-        });
+        // Chunk large requests to avoid payload size limits
+        const CHUNK_SIZE = 500;
+
+        if (leadIds.length <= CHUNK_SIZE) {
+            return this.request('/leads/bulk-assign-campaign', {
+                method: 'POST',
+                body: JSON.stringify({ leadIds, campaignId }),
+            });
+        }
+
+        // Process in chunks for large batches
+        let totalProcessed = 0;
+        for (let i = 0; i < leadIds.length; i += CHUNK_SIZE) {
+            const chunk = leadIds.slice(i, i + CHUNK_SIZE);
+            const result = await this.request('/leads/bulk-assign-campaign', {
+                method: 'POST',
+                body: JSON.stringify({ leadIds: chunk, campaignId }),
+            });
+            totalProcessed += result.count || chunk.length;
+        }
+
+        return { success: true, count: totalProcessed };
     }
 
     // User Management
@@ -276,6 +306,27 @@ class ApiService {
             method: 'POST',
             body: JSON.stringify({ filters }),
         });
+    }
+
+    // Lead Locking - Prevent multiple users dialing same lead
+    async getLeadLock(leadId) {
+        return this.request(`/leads/${leadId}/lock`);
+    }
+
+    async acquireLeadLock(leadId) {
+        return this.request(`/leads/${leadId}/lock`, {
+            method: 'POST',
+        });
+    }
+
+    async releaseLeadLock(leadId) {
+        return this.request(`/leads/${leadId}/lock`, {
+            method: 'DELETE',
+        });
+    }
+
+    async getCampaignLocks(campaignId) {
+        return this.request(`/leads/campaign/${campaignId}/locks`);
     }
 }
 

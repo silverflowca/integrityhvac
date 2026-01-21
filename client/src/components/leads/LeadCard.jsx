@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import './LeadCard.css';
 
@@ -19,8 +19,9 @@ const PRIORITY_COLORS = {
     cold: '#06b6d4'
 };
 
-const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
+const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall, lockInfo }) => {
     const [statuses, setStatuses] = useState([]);
+    const [isCheckingLock, setIsCheckingLock] = useState(false);
 
     useEffect(() => {
         fetchStatuses();
@@ -57,9 +58,32 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
         onUpdateStatus(lead.id, e.target.value);
     };
 
-    const handleCall = () => {
-        if (lead.phone) {
-            onCall(lead.phone, lead.id);
+    const handleCall = async () => {
+        if (!lead.phone) return;
+
+        // If already locked by someone else, don't allow call
+        if (lockInfo && lockInfo.locked) {
+            alert(`This lead is currently being dialed by ${lockInfo.user_name}`);
+            return;
+        }
+
+        setIsCheckingLock(true);
+        try {
+            // Try to acquire lock before calling
+            const response = await api.acquireLeadLock(lead.id);
+            if (response.success) {
+                onCall(lead.phone, lead.id);
+            }
+        } catch (error) {
+            if (error.message.includes('being dialed') || error.message.includes('locked')) {
+                alert(`This lead is currently being dialed by another user`);
+            } else {
+                console.error('Error acquiring lock:', error);
+                // Still allow call if lock check fails (graceful degradation)
+                onCall(lead.phone, lead.id);
+            }
+        } finally {
+            setIsCheckingLock(false);
         }
     };
 
@@ -101,13 +125,20 @@ const LeadCard = ({ lead, onEdit, onDelete, onUpdateStatus, onCall }) => {
                     <span className="detail-icon">📞</span>
                     <span className="detail-text">{lead.phone || 'No phone'}</span>
                     {lead.phone && (
-                        <button
-                            className="btn-call"
-                            onClick={handleCall}
-                            title="Call this number"
-                        >
-                            📞 Call
-                        </button>
+                        lockInfo && lockInfo.locked ? (
+                            <span className="lock-indicator" title={`Being dialed by ${lockInfo.user_name}`}>
+                                🔒 {lockInfo.user_name}
+                            </span>
+                        ) : (
+                            <button
+                                className="btn-call"
+                                onClick={handleCall}
+                                title="Call this number"
+                                disabled={isCheckingLock}
+                            >
+                                {isCheckingLock ? '...' : '📞 Call'}
+                            </button>
+                        )
                     )}
                 </div>
                 {lead.email && (

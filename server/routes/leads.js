@@ -16,6 +16,7 @@ router.get('/', async (req, res) => {
                 assigned_user:assigned_to(id, name, email, role),
                 campaign:campaign_id(id, name, status)
             `)
+            .neq('status', 'deleted') // Exclude soft-deleted leads
             .order('created_at', { ascending: false })
             .limit(100000); // Set high limit to return all leads
 
@@ -314,16 +315,21 @@ router.put('/:id', async (req, res) => {
 });
 
 /**
- * Delete lead
+ * Delete lead (soft delete - sets status to 'deleted')
  */
 router.delete('/:id', async (req, res) => {
     try {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('leads')
-            .delete()
-            .eq('id', req.params.id);
+            .update({ status: 'deleted' })
+            .eq('id', req.params.id)
+            .select();
 
         if (error) throw error;
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ success: false, error: 'Lead not found' });
+        }
 
         res.json({ success: true, message: 'Lead deleted successfully' });
     } catch (error) {
@@ -337,6 +343,11 @@ router.delete('/:id', async (req, res) => {
  */
 router.get('/status/:status', async (req, res) => {
     try {
+        // Don't allow fetching deleted leads via this endpoint
+        if (req.params.status === 'deleted') {
+            return res.json({ success: true, leads: [] });
+        }
+
         const { data: leads, error } = await supabase
             .from('leads')
             .select('*')
@@ -371,6 +382,7 @@ router.get('/status/:status', async (req, res) => {
 
 /**
  * Bulk assign leads to a campaign
+ * Handles large batches by chunking to avoid Supabase limits
  */
 router.post('/bulk-assign-campaign', async (req, res) => {
     try {
@@ -380,19 +392,31 @@ router.post('/bulk-assign-campaign', async (req, res) => {
             return res.status(400).json({ success: false, error: 'leadIds array is required' });
         }
 
-        // Update all leads with the campaign_id
-        const { data: updatedLeads, error } = await supabase
-            .from('leads')
-            .update({ campaign_id: campaignId || null })
-            .in('id', leadIds)
-            .select();
+        // Chunk the leadIds to avoid Supabase URI length limits
+        const CHUNK_SIZE = 100;
+        const chunks = [];
+        for (let i = 0; i < leadIds.length; i += CHUNK_SIZE) {
+            chunks.push(leadIds.slice(i, i + CHUNK_SIZE));
+        }
 
-        if (error) throw error;
+        let totalUpdated = 0;
+
+        // Process each chunk
+        for (const chunk of chunks) {
+            const { data: updatedLeads, error } = await supabase
+                .from('leads')
+                .update({ campaign_id: campaignId || null })
+                .in('id', chunk)
+                .select();
+
+            if (error) throw error;
+            totalUpdated += updatedLeads?.length || 0;
+        }
 
         res.json({
             success: true,
-            message: `${updatedLeads.length} leads ${campaignId ? 'assigned to campaign' : 'removed from campaign'}`,
-            count: updatedLeads.length
+            message: `${totalUpdated} leads ${campaignId ? 'assigned to campaign' : 'removed from campaign'}`,
+            count: totalUpdated
         });
     } catch (error) {
         console.error('Error bulk assigning leads to campaign:', error);
@@ -412,21 +436,36 @@ router.post('/bulk-action', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Action is required' });
         }
 
-        // If specific leadIds provided (client-side selection < 250)
-        if (leadIds && Array.isArray(leadIds) && leadIds.length > 0) {
-            // For delete action
-            if (action === 'delete') {
-                const { error } = await supabase
+        // Chunk size to avoid Supabase URI length limits
+        const CHUNK_SIZE = 100;
+
+        // Helper function to process in chunks
+        const processInChunks = async (ids, updateData) => {
+            let totalCount = 0;
+            for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+                const chunk = ids.slice(i, i + CHUNK_SIZE);
+                const { data, error } = await supabase
                     .from('leads')
-                    .delete()
-                    .in('id', leadIds);
+                    .update(updateData)
+                    .in('id', chunk)
+                    .select();
 
                 if (error) throw error;
+                totalCount += data?.length || 0;
+            }
+            return totalCount;
+        };
+
+        // If specific leadIds provided (client-side selection)
+        if (leadIds && Array.isArray(leadIds) && leadIds.length > 0) {
+            // For delete action - soft delete by setting status to 'deleted'
+            if (action === 'delete') {
+                const totalDeleted = await processInChunks(leadIds, { status: 'deleted' });
 
                 return res.json({
                     success: true,
-                    message: `Deleted ${leadIds.length} leads`,
-                    count: leadIds.length
+                    message: `Deleted ${totalDeleted} leads`,
+                    count: totalDeleted
                 });
             }
 
@@ -449,25 +488,20 @@ router.post('/bulk-action', async (req, res) => {
                     return res.status(400).json({ success: false, error: 'Invalid action' });
             }
 
-            const { data, error } = await supabase
-                .from('leads')
-                .update(updateData)
-                .in('id', leadIds)
-                .select();
-
-            if (error) throw error;
+            const totalUpdated = await processInChunks(leadIds, updateData);
 
             return res.json({
                 success: true,
-                message: `Updated ${data.length} leads`,
-                count: data.length
+                message: `Updated ${totalUpdated} leads`,
+                count: totalUpdated
             });
         }
 
         // Filter-based bulk action (server-side for > 250 leads)
         if (filters) {
-            // First, get IDs of matching leads
-            let countQuery = supabase.from('leads').select('id');
+            // First, get IDs of matching leads (exclude already deleted)
+            let countQuery = supabase.from('leads').select('id')
+                .neq('status', 'deleted');
 
             if (filters.campaign_id !== undefined) {
                 if (filters.campaign_id === null || filters.campaign_id === '') {
@@ -504,19 +538,14 @@ router.post('/bulk-action', async (req, res) => {
 
             const matchingIds = matchingLeads.map(l => l.id);
 
-            // For delete action
+            // For delete action - soft delete by setting status to 'deleted'
             if (action === 'delete') {
-                const { error } = await supabase
-                    .from('leads')
-                    .delete()
-                    .in('id', matchingIds);
-
-                if (error) throw error;
+                const totalDeleted = await processInChunks(matchingIds, { status: 'deleted' });
 
                 return res.json({
                     success: true,
-                    message: `Deleted ${matchingIds.length} leads`,
-                    count: matchingIds.length
+                    message: `Deleted ${totalDeleted} leads`,
+                    count: totalDeleted
                 });
             }
 
@@ -539,18 +568,12 @@ router.post('/bulk-action', async (req, res) => {
                     return res.status(400).json({ success: false, error: 'Invalid action' });
             }
 
-            const { data, error } = await supabase
-                .from('leads')
-                .update(updateData)
-                .in('id', matchingIds)
-                .select();
-
-            if (error) throw error;
+            const totalUpdated = await processInChunks(matchingIds, updateData);
 
             return res.json({
                 success: true,
-                message: `Updated ${data.length} leads`,
-                count: data.length
+                message: `Updated ${totalUpdated} leads`,
+                count: totalUpdated
             });
         }
 
@@ -569,7 +592,8 @@ router.post('/bulk-count', async (req, res) => {
     try {
         const { filters } = req.body;
 
-        let query = supabase.from('leads').select('id');
+        let query = supabase.from('leads').select('id')
+            .neq('status', 'deleted'); // Exclude soft-deleted leads
 
         if (filters) {
             if (filters.campaign_id !== undefined) {
@@ -604,6 +628,205 @@ router.post('/bulk-count', async (req, res) => {
         });
     } catch (error) {
         console.error('Error counting leads:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================================
+// LEAD LOCKING ENDPOINTS - Prevent multiple users dialing same lead
+// ============================================================================
+
+/**
+ * Get lock status for a lead
+ * Returns lock info if locked, null if not locked
+ */
+router.get('/:id/lock', async (req, res) => {
+    try {
+        // First, clean up any expired locks
+        await supabase
+            .from('lead_locks')
+            .delete()
+            .lt('expires_at', new Date().toISOString());
+
+        // Check if lead is locked
+        const { data: lock, error } = await supabase
+            .from('lead_locks')
+            .select('*')
+            .eq('lead_id', req.params.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            // PGRST116 = no rows returned (not locked)
+            throw error;
+        }
+
+        res.json({
+            success: true,
+            locked: !!lock,
+            lock: lock || null
+        });
+    } catch (error) {
+        console.error('Error checking lead lock:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * Acquire lock on a lead (before dialing)
+ * Fails if already locked by another user
+ */
+router.post('/:id/lock', async (req, res) => {
+    try {
+        const leadId = req.params.id;
+        const userId = req.user.id;
+        const userName = req.user.name || req.user.email;
+
+        // First, clean up any expired locks
+        await supabase
+            .from('lead_locks')
+            .delete()
+            .lt('expires_at', new Date().toISOString());
+
+        // Check if already locked
+        const { data: existingLock, error: checkError } = await supabase
+            .from('lead_locks')
+            .select('*')
+            .eq('lead_id', leadId)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            throw checkError;
+        }
+
+        if (existingLock) {
+            // Already locked
+            if (existingLock.user_id === userId) {
+                // Same user - extend the lock
+                const { data: updatedLock, error: updateError } = await supabase
+                    .from('lead_locks')
+                    .update({
+                        locked_at: new Date().toISOString(),
+                        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+                    })
+                    .eq('lead_id', leadId)
+                    .select()
+                    .single();
+
+                if (updateError) throw updateError;
+
+                return res.json({
+                    success: true,
+                    lock: updatedLock,
+                    message: 'Lock extended'
+                });
+            } else {
+                // Different user - reject
+                return res.status(409).json({
+                    success: false,
+                    error: 'Lead is currently being dialed by another user',
+                    lockedBy: existingLock.user_name,
+                    lock: existingLock
+                });
+            }
+        }
+
+        // Create new lock
+        const { data: newLock, error: insertError } = await supabase
+            .from('lead_locks')
+            .insert({
+                lead_id: leadId,
+                user_id: userId,
+                user_name: userName,
+                locked_at: new Date().toISOString(),
+                expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+            })
+            .select()
+            .single();
+
+        if (insertError) {
+            // Handle race condition - another user locked it first
+            if (insertError.code === '23505') { // unique violation
+                return res.status(409).json({
+                    success: false,
+                    error: 'Lead was just locked by another user'
+                });
+            }
+            throw insertError;
+        }
+
+        res.json({
+            success: true,
+            lock: newLock,
+            message: 'Lock acquired'
+        });
+    } catch (error) {
+        console.error('Error acquiring lead lock:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * Release lock on a lead (after hanging up)
+ */
+router.delete('/:id/lock', async (req, res) => {
+    try {
+        const leadId = req.params.id;
+        const userId = req.user.id;
+
+        // Only delete if it's the user's own lock
+        const { data, error } = await supabase
+            .from('lead_locks')
+            .delete()
+            .eq('lead_id', leadId)
+            .eq('user_id', userId)
+            .select();
+
+        if (error) throw error;
+
+        res.json({
+            success: true,
+            released: data && data.length > 0,
+            message: data && data.length > 0 ? 'Lock released' : 'No lock to release'
+        });
+    } catch (error) {
+        console.error('Error releasing lead lock:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * Get all active locks for a campaign (for UI display)
+ */
+router.get('/campaign/:campaignId/locks', async (req, res) => {
+    try {
+        // Clean up expired locks first
+        await supabase
+            .from('lead_locks')
+            .delete()
+            .lt('expires_at', new Date().toISOString());
+
+        // Get all active locks for leads in this campaign
+        const { data: locks, error } = await supabase
+            .from('lead_locks')
+            .select(`
+                *,
+                lead:lead_id(id, name, campaign_id)
+            `)
+            .gt('expires_at', new Date().toISOString());
+
+        if (error) throw error;
+
+        // Filter to only locks for leads in this campaign
+        const campaignLocks = locks.filter(lock =>
+            lock.lead && lock.lead.campaign_id === req.params.campaignId
+        );
+
+        res.json({
+            success: true,
+            locks: campaignLocks
+        });
+    } catch (error) {
+        console.error('Error getting campaign locks:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });

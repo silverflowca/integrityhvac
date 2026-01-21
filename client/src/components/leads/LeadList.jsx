@@ -2,7 +2,7 @@ import React from 'react';
 import LeadCard from './LeadCard';
 import './LeadList.css';
 
-const LeadList = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall }) => {
+const LeadList = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall, leadLocks = {} }) => {
     if (leads.length === 0) {
         return (
             <div className="empty-state">
@@ -23,6 +23,7 @@ const LeadList = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onCall }) =
                     onDelete={onDeleteLead}
                     onUpdateStatus={onUpdateStatus}
                     onCall={onCall}
+                    lockInfo={leadLocks[lead.id]}
                 />
             ))}
         </div>

@@ -87,6 +87,17 @@
 }
 
 /* Users tab */
+.users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.users-header .tab-description {
+    margin: 0;
+}
+
 .user-list {
     display: flex;
     flex-direction: column;
@@ -284,6 +295,150 @@
     color: var(--text-secondary);
 }
 
+/* Bulk assign toolbar */
+.bulk-assign-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    gap: 16px;
+}
+
+.select-all-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.select-all-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.bulk-assign-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bulk-assign-controls .selected-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.bulk-assign-controls .user-select {
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-width: 140px;
+}
+
+.lead-item.selected {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.lead-item .assigned-user {
+    padding: 3px 8px;
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* Virtual scrolling */
+.lead-list.virtual-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+/* Pagination controls */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-color);
+    margin-top: 12px;
+}
+
+.pagination-controls:first-of-type {
+    border-top: none;
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.pagination-controls .btn {
+    min-width: 32px;
+    padding: 6px 10px;
+}
+
+.pagination-controls .page-info {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 0 12px;
+}
+
+/* Page size selector */
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    padding-right: 12px;
+    border-right: 1px solid var(--border-color);
+}
+
+.page-size-selector label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.page-size-select {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 13px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.page-size-select:hover {
+    border-color: var(--primary-color);
+}
+
+.page-size-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* More leads notice */
+.more-leads-notice {
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
 /* Empty state */
 .empty-state {
     text-align: center;
@@ -365,6 +520,20 @@
     }
 
     /* Users tab mobile */
+    .users-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .users-header .tab-description {
+        margin-bottom: 0;
+    }
+
+    .users-header button {
+        width: 100%;
+    }
+
     .user-item {
         padding: 10px 12px;
         gap: 10px;
@@ -404,9 +573,25 @@
         width: 100%;
     }
 
+    .bulk-assign-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .bulk-assign-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bulk-assign-controls .user-select {
+        flex: 1;
+        min-width: 100px;
+    }
+
     .lead-item {
         padding: 12px;
-        flex-direction: column;
+        flex-direction: row;
         align-items: flex-start;
         gap: 8px;
     }
@@ -495,6 +680,23 @@
 
     .loading-state {
         padding: 24px 12px;
+    }
+
+    /* Page size selector mobile */
+    .pagination-controls {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .page-size-selector {
+        flex: 0 0 100%;
+        justify-content: center;
+        margin-right: 0;
+        padding-right: 0;
+        border-right: none;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid var(--border-color);
     }
 }
 

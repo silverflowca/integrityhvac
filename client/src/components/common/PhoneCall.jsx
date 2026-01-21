@@ -263,6 +263,16 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
             await saveCallNotes();
         }
 
+        // Release the dial lock
+        if (leadId) {
+            try {
+                await api.releaseLeadLock(leadId);
+                console.log('Lead lock released');
+            } catch (error) {
+                console.log('Error releasing lock (may already be released):', error.message);
+            }
+        }
+
         // Stop the timer first
         if (timerRef.current) {
             clearInterval(timerRef.current);
