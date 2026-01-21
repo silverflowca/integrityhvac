@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import BulkActionToolbar from './BulkActionToolbar';
 import BulkActionModal from './BulkActionModal';
@@ -27,6 +28,9 @@ const PRIORITY_COLORS = {
 };
 
 const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdateCampaign, onCall, currentPage: externalPage, onPageChange: externalPageChange, onRefresh }) => {
+    const { user: currentUser, profile } = useAuth();
+    const isAdmin = profile?.role === 'admin' || currentUser?.user_metadata?.role === 'admin';
+
     const [internalPage, setInternalPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(25);
     const [statuses, setStatuses] = useState([]);
@@ -384,6 +388,7 @@ const LeadListView = ({ leads, onEditLead, onDeleteLead, onUpdateStatus, onUpdat
                 onBulkAction={handleBulkAction}
                 isServerSideMode={isServerSideMode}
                 onOpenBulkModal={handleOpenBulkModal}
+                isAdmin={isAdmin}
             />
             <PaginationControls />
             <table className="leads-table">

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import './LeadFilters.css';
 
 const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, leadCount }) => {
+    const { user } = useAuth();
     const [isExpanded, setIsExpanded] = useState(false);
     const [statuses, setStatuses] = useState([]);
     const [campaigns, setCampaigns] = useState([]);
@@ -30,7 +32,7 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
         }
     };
 
-    const hasActiveFilters = filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all';
+    const hasActiveFilters = filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all' || filters.assignedTo !== 'all';
 
     return (
         <div className="lead-filters">
@@ -38,7 +40,7 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                 <div className="filter-header-left">
                     <span className="filter-icon">🔍</span>
                     <span className="filter-title">Filters & Sort</span>
-                    {hasActiveFilters && <span className="filter-badge">{(filters.status !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0) + (filters.campaign !== 'all' ? 1 : 0)}</span>}
+                    {hasActiveFilters && <span className="filter-badge">{(filters.status !== 'all' ? 1 : 0) + (filters.priority !== 'all' ? 1 : 0) + (filters.campaign !== 'all' ? 1 : 0) + (filters.assignedTo !== 'all' ? 1 : 0)}</span>}
                 </div>
                 <div className="filter-header-right">
                     <span className="lead-count-mobile">{leadCount}</span>
@@ -98,6 +100,19 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                 </div>
 
                 <div className="filter-group">
+                    <label className="filter-label">Assigned To</label>
+                    <select
+                        className="filter-select"
+                        value={filters.assignedTo || 'all'}
+                        onChange={(e) => onFilterChange('assignedTo', e.target.value)}
+                    >
+                        <option value="all">All Users</option>
+                        <option value="me">Assigned to Me</option>
+                        <option value="unassigned">Unassigned</option>
+                    </select>
+                </div>
+
+                <div className="filter-group">
                     <label className="filter-label">Sort By</label>
                     <select
                         className="filter-select"
@@ -131,13 +146,14 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                     <span className="lead-count">{leadCount} leads</span>
                 </div>
 
-                {(filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all') && (
+                {(filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all' || filters.assignedTo !== 'all') && (
                     <button
                         className="btn-clear-filters"
                         onClick={() => {
                             onFilterChange('status', 'all');
                             onFilterChange('priority', 'all');
                             onFilterChange('campaign', 'all');
+                            onFilterChange('assignedTo', 'all');
                         }}
                         title="Clear all filters"
                     >

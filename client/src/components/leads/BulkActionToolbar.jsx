@@ -8,7 +8,8 @@ const BulkActionToolbar = ({
     onClearSelection,
     onBulkAction,
     isServerSideMode,
-    onOpenBulkModal
+    onOpenBulkModal,
+    isAdmin
 }) => {
     const BULK_THRESHOLD = 250;
 
@@ -65,7 +66,7 @@ const BulkActionToolbar = ({
                         <option value="change_status">Change Status</option>
                         <option value="change_priority">Change Priority</option>
                         <option value="assign_user">Assign to User</option>
-                        <option value="delete">Delete</option>
+                        {isAdmin && <option value="delete">Delete</option>}
                     </select>
                 </div>
             )}

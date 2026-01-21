@@ -17,6 +17,7 @@ import api from '../services/api';
 import '../App.css';
 
 function CRM() {
+    const { user } = useAuth();
     const [leads, setLeads] = useState([]);
     const [filteredLeads, setFilteredLeads] = useState([]);
     const [activeView, setActiveView] = useState('leads');
@@ -36,6 +37,7 @@ function CRM() {
         status: 'all',
         priority: 'all',
         campaign: 'all',
+        assignedTo: 'all',
         sortBy: 'newest',
         groupBy: 'none'
     });
@@ -78,6 +80,15 @@ function CRM() {
                 result = result.filter(lead => !lead.campaignId);
             } else {
                 result = result.filter(lead => lead.campaignId === filters.campaign);
+            }
+        }
+
+        // Apply assignedTo filter
+        if (filters.assignedTo !== 'all') {
+            if (filters.assignedTo === 'me') {
+                result = result.filter(lead => lead.assignedTo === user?.id);
+            } else if (filters.assignedTo === 'unassigned') {
+                result = result.filter(lead => !lead.assignedTo);
             }
         }
 
