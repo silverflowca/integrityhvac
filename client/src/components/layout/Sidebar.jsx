@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
 
     const handleNavClick = (view) => {
         onViewChange(view);
@@ -22,6 +22,11 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
         return name.substring(0, 2).toUpperCase();
     };
 
+    // Get display name from profile or user metadata or email
+    const displayName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+    const displayEmail = user?.email || '';
+    const displayRole = profile?.role || user?.user_metadata?.role || 'user';
+
     return (
         <aside className={'sidebar ' + (mobileOpen ? 'mobile-open' : '')}>
             <div className="logo">
@@ -31,10 +36,10 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
 
             <div className="user-info">
                 <div className="user-profile">
-                    <div className="user-avatar">{user ? getInitials(user.name) : 'U'}</div>
+                    <div className="user-avatar">{getInitials(displayName)}</div>
                     <div className="user-details">
-                        <h3>{user ? user.name : 'Loading...'}</h3>
-                        <div className="user-role">{user ? (user.role || user.email) : ''}</div>
+                        <h3>{displayName}</h3>
+                        <div className="user-role">{displayEmail}</div>
                     </div>
                 </div>
             </div>
@@ -88,7 +93,7 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
 
                 <div className="nav-section">
                     <div className="nav-section-title">Management</div>
-                    {user && user.role === 'admin' && (
+                    {displayRole === 'admin' && (
                         <div
                             className={'nav-item ' + (activeView === 'users' ? 'active' : '')}
                             onClick={() => handleNavClick('users')}

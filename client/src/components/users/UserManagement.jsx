@@ -6,7 +6,7 @@ import RoleManager from './RoleManager';
 import './UserManagement.css';
 
 const UserManagement = () => {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, profile } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -14,8 +14,10 @@ const UserManagement = () => {
     const [showRoleManager, setShowRoleManager] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
 
-    // Check if current user is admin
-    if (currentUser?.role !== 'admin') {
+    // Check if current user is admin (from profile or user metadata)
+    const isAdmin = profile?.role === 'admin' || currentUser?.user_metadata?.role === 'admin';
+
+    if (!isAdmin) {
         return (
             <div className="user-management-container">
                 <div className="access-denied">
