@@ -18,6 +18,7 @@ const MyLeads = ({ onEditLead, onDeleteLead, onCall }) => {
     const [filters, setFilters] = useState({
         status: 'all',
         priority: 'all',
+        assignedTo: 'all',
         sortBy: 'newest',
         groupBy: 'none'
     });
@@ -104,6 +105,15 @@ const MyLeads = ({ onEditLead, onDeleteLead, onCall }) => {
             result = result.filter(lead => lead.priority === filters.priority);
         }
 
+        // Apply assignedTo filter
+        if (filters.assignedTo !== 'all') {
+            if (filters.assignedTo === 'me') {
+                result = result.filter(lead => lead.assignedTo === user?.id);
+            } else if (filters.assignedTo === 'unassigned') {
+                result = result.filter(lead => !lead.assignedTo);
+            }
+        }
+
         // Apply sorting
         result = sortLeads(result, filters.sortBy);
 
@@ -129,6 +139,10 @@ const MyLeads = ({ onEditLead, onDeleteLead, onCall }) => {
             case 'priority':
                 const priorityOrder = { hot: 1, warm: 2, cold: 3 };
                 return sorted.sort((a, b) => (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0));
+            case 'callsAsc':
+                return sorted.sort((a, b) => (a.callCount || 0) - (b.callCount || 0));
+            case 'callsDesc':
+                return sorted.sort((a, b) => (b.callCount || 0) - (a.callCount || 0));
             default:
                 return sorted;
         }
@@ -270,6 +284,7 @@ const MyLeads = ({ onEditLead, onDeleteLead, onCall }) => {
                 onSortChange={handleSortChange}
                 onGroupChange={handleGroupChange}
                 leadCount={filteredLeads.length}
+                onRefresh={fetchData}
             />
 
             <div className="leads-content">

@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import './Sidebar.css';
 
-const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) => {
+const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose, isCollapsed, onToggleCollapse }) => {
     const { user, profile } = useAuth();
 
     const handleNavClick = (view) => {
@@ -27,20 +27,35 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
     const displayEmail = user?.email || '';
     const displayRole = profile?.role || user?.user_metadata?.role || 'user';
 
+    const sidebarClasses = [
+        'sidebar',
+        mobileOpen ? 'mobile-open' : '',
+        isCollapsed ? 'collapsed' : ''
+    ].filter(Boolean).join(' ');
+
     return (
-        <aside className={'sidebar ' + (mobileOpen ? 'mobile-open' : '')}>
+        <aside className={sidebarClasses}>
             <div className="logo">
-                <div className="logo-title">SalesTrack Pro</div>
-                <div className="logo-subtitle">HVAC Cold Calling</div>
+                <div className="logo-title">{isCollapsed ? 'ST' : 'SalesTrack Pro'}</div>
+                {!isCollapsed && <div className="logo-subtitle">HVAC Cold Calling</div>}
+                <button
+                    className="collapse-btn"
+                    onClick={onToggleCollapse}
+                    title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
+                >
+                    {isCollapsed ? '»' : '«'}
+                </button>
             </div>
 
             <div className="user-info">
                 <div className="user-profile">
-                    <div className="user-avatar">{getInitials(displayName)}</div>
-                    <div className="user-details">
-                        <h3>{displayName}</h3>
-                        <div className="user-role">{displayEmail}</div>
-                    </div>
+                    <div className="user-avatar" title={displayName}>{getInitials(displayName)}</div>
+                    {!isCollapsed && (
+                        <div className="user-details">
+                            <h3>{displayName}</h3>
+                            <div className="user-role">{displayEmail}</div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -49,86 +64,95 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose }) =
                     <div
                         className={'nav-item ' + (activeView === 'leads' ? 'active' : '')}
                         onClick={() => handleNavClick('leads')}
+                        title={isCollapsed ? 'All Leads' : ''}
                     >
                         <span className="nav-icon">📋</span>
-                        All Leads
-                        <span className="nav-badge">{leadCount}</span>
+                        {!isCollapsed && <span className="nav-text">All Leads</span>}
+                        {!isCollapsed && <span className="nav-badge">{leadCount}</span>}
+                        {isCollapsed && leadCount > 0 && <span className="nav-badge-mini">{leadCount}</span>}
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'my-leads' ? 'active' : '')}
                         onClick={() => handleNavClick('my-leads')}
+                        title={isCollapsed ? 'My Leads' : ''}
                     >
                         <span className="nav-icon">🎯</span>
-                        My Leads
+                        {!isCollapsed && <span className="nav-text">My Leads</span>}
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'dashboard' ? 'active' : '')}
                         onClick={() => handleNavClick('dashboard')}
+                        title={isCollapsed ? 'My Dashboard' : ''}
                     >
                         <span className="nav-icon">📊</span>
-                        My Dashboard
+                        {!isCollapsed && <span className="nav-text">My Dashboard</span>}
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'team-dashboard' ? 'active' : '')}
                         onClick={() => handleNavClick('team-dashboard')}
+                        title={isCollapsed ? 'Team Dashboard' : ''}
                     >
                         <span className="nav-icon">👥</span>
-                        Team Dashboard
+                        {!isCollapsed && <span className="nav-text">Team Dashboard</span>}
                     </div>
                     <div
                         className="nav-item disabled"
-                        title="Coming soon"
+                        title={isCollapsed ? 'Call Queue (Coming soon)' : 'Coming soon'}
                     >
                         <span className="nav-icon">📞</span>
-                        Call Queue
+                        {!isCollapsed && <span className="nav-text">Call Queue</span>}
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'campaigns' ? 'active' : '')}
                         onClick={() => handleNavClick('campaigns')}
+                        title={isCollapsed ? 'Campaigns' : ''}
                     >
                         <span className="nav-icon">📁</span>
-                        Campaigns
+                        {!isCollapsed && <span className="nav-text">Campaigns</span>}
                     </div>
                 </div>
 
                 <div className="nav-section">
-                    <div className="nav-section-title">Management</div>
+                    {!isCollapsed && <div className="nav-section-title">Management</div>}
                     {displayRole === 'admin' && (
                         <div
                             className={'nav-item ' + (activeView === 'users' ? 'active' : '')}
                             onClick={() => handleNavClick('users')}
+                            title={isCollapsed ? 'User Management' : ''}
                         >
                             <span className="nav-icon">👤</span>
-                            User Management
+                            {!isCollapsed && <span className="nav-text">User Management</span>}
                         </div>
                     )}
                     <div
                         className="nav-item disabled"
-                        title="Coming soon"
+                        title={isCollapsed ? 'Contacts (Coming soon)' : 'Coming soon'}
                     >
                         <span className="nav-icon">👥</span>
-                        Contacts
+                        {!isCollapsed && <span className="nav-text">Contacts</span>}
                     </div>
                     <div
                         className="nav-item disabled"
-                        title="Coming soon"
+                        title={isCollapsed ? 'Reports (Coming soon)' : 'Coming soon'}
                     >
                         <span className="nav-icon">📈</span>
-                        Reports
+                        {!isCollapsed && <span className="nav-text">Reports</span>}
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'automation' ? 'active' : '')}
                         onClick={() => handleNavClick('automation')}
+                        title={isCollapsed ? 'Automation' : ''}
                     >
                         <span className="nav-icon">⚡</span>
-                        Automation
+                        {!isCollapsed && <span className="nav-text">Automation</span>}
                     </div>
                     <div
                         className={'nav-item ' + (activeView === 'settings' ? 'active' : '')}
                         onClick={() => handleNavClick('settings')}
+                        title={isCollapsed ? 'Settings' : ''}
                     >
                         <span className="nav-icon">⚙️</span>
-                        Settings
+                        {!isCollapsed && <span className="nav-text">Settings</span>}
                     </div>
                 </div>
             </nav>

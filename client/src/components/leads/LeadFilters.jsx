@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import './LeadFilters.css';
 
-const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, leadCount }) => {
+const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, leadCount, onRefresh }) => {
     const { user } = useAuth();
     const [isExpanded, setIsExpanded] = useState(false);
     const [statuses, setStatuses] = useState([]);
@@ -125,6 +125,8 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
                         <option value="companyDesc">Company Z-A</option>
                         <option value="status">Status</option>
                         <option value="priority">Priority</option>
+                        <option value="callsAsc">Calls (Low to High)</option>
+                        <option value="callsDesc">Calls (High to Low)</option>
                     </select>
                 </div>
 
@@ -144,6 +146,15 @@ const LeadFilters = ({ filters, onFilterChange, onSortChange, onGroupChange, lea
 
                 <div className="filter-stats">
                     <span className="lead-count">{leadCount} leads</span>
+                    {onRefresh && (
+                        <button
+                            className="btn-refresh"
+                            onClick={onRefresh}
+                            title="Refresh leads"
+                        >
+                            Refresh
+                        </button>
+                    )}
                 </div>
 
                 {(filters.status !== 'all' || filters.priority !== 'all' || filters.campaign !== 'all' || filters.assignedTo !== 'all') && (

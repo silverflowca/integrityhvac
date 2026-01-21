@@ -121,6 +121,32 @@
     margin-left: auto;
     display: flex;
     align-items: center;
+    gap: 8px;
+}
+
+.btn-refresh {
+    padding: 8px 16px;
+    background: var(--accent-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-refresh:hover {
+    background: #0284c7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3);
+}
+
+.btn-refresh:active {
+    transform: translateY(0);
 }
 
 .lead-count {
@@ -221,6 +247,11 @@
     }
 
     .btn-clear-filters {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .btn-refresh {
         padding: 6px 12px;
         font-size: 12px;
     }

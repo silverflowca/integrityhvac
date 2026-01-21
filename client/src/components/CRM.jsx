@@ -30,6 +30,10 @@ function CRM() {
     const [activeCall, setActiveCall] = useState(null);
     const [showSipSettings, setShowSipSettings] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+        const saved = localStorage.getItem('sidebarCollapsed');
+        return saved === 'true';
+    });
     const [users, setUsers] = useState([]);
     const [currentPageState, setCurrentPageState] = useState(1);
     const preservePageRef = useRef(false);
@@ -122,6 +126,10 @@ function CRM() {
             case 'priority':
                 const priorityOrder = { hot: 1, warm: 2, cold: 3 };
                 return sorted.sort((a, b) => (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0));
+            case 'callsAsc':
+                return sorted.sort((a, b) => (a.callCount || 0) - (b.callCount || 0));
+            case 'callsDesc':
+                return sorted.sort((a, b) => (b.callCount || 0) - (a.callCount || 0));
             default:
                 return sorted;
         }
@@ -280,6 +288,14 @@ function CRM() {
         setMobileMenuOpen(false);
     };
 
+    const toggleSidebarCollapse = () => {
+        setSidebarCollapsed(prev => {
+            const newValue = !prev;
+            localStorage.setItem('sidebarCollapsed', newValue.toString());
+            return newValue;
+        });
+    };
+
     const handleFilterChange = (filterType, value) => {
         setFilters(prev => ({
             ...prev,
@@ -352,7 +368,7 @@ function CRM() {
     };
 
     return (
-        <div className="app-container">
+        <div className={'app-container' + (sidebarCollapsed ? ' sidebar-collapsed' : '')}>
             {/* Mobile overlay */}
             <div className={'sidebar-overlay ' + (mobileMenuOpen ? 'active' : '')} onClick={closeMobileMenu}></div>
 
@@ -362,6 +378,8 @@ function CRM() {
                 leadCount={leads.length}
                 mobileOpen={mobileMenuOpen}
                 onClose={closeMobileMenu}
+                isCollapsed={sidebarCollapsed}
+                onToggleCollapse={toggleSidebarCollapse}
             />
 
             <main className="main-content">
@@ -464,6 +482,7 @@ function CRM() {
                             onSortChange={handleSortChange}
                             onGroupChange={handleGroupChange}
                             leadCount={filteredLeads.length}
+                            onRefresh={fetchLeads}
                         />
 
                         <div className="content-area">
