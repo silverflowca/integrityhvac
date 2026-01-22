@@ -18,7 +18,7 @@ const MyLeads = ({ onEditLead, onDeleteLead, onCall }) => {
     const [filters, setFilters] = useState({
         status: 'all',
         priority: 'all',
-        assignedTo: 'all',
+        assignedTo: 'me',
         sortBy: 'newest',
         groupBy: 'none'
     });
