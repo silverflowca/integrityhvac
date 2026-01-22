@@ -258,6 +258,20 @@
     color: var(--text-secondary);
 }
 
+/* Sub-item styling for nested menu items */
+.nav-item.nav-sub-item {
+    padding-left: 36px;
+    font-size: 13px;
+}
+
+.nav-item.nav-sub-item .nav-icon {
+    font-size: 14px;
+}
+
+.sidebar.collapsed .nav-item.nav-sub-item {
+    padding-left: 16px;
+}
+
 /* Mobile responsive - hide collapse button on mobile */
 @media (max-width: 1024px) {
     .collapse-btn {

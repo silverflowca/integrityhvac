@@ -13,6 +13,8 @@ const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext
     const [nextLead, setNextLead] = useState(null);
     const [campaignName, setCampaignName] = useState('');
     const [loadingNext, setLoadingNext] = useState(false);
+    const [nextUnassignedLead, setNextUnassignedLead] = useState(null);
+    const [loadingUnassigned, setLoadingUnassigned] = useState(false);
     const sessionRef = useRef(null);
     const uaRef = useRef(null);
     const timerRef = useRef(null);
@@ -60,6 +62,41 @@ const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext
         };
         fetchNextLead();
     }, [lead?.campaignId, leadId]);
+
+    // Track if call has been active (connected or at least tried)
+    const callWasActiveRef = useRef(false);
+
+    // Mark call as active once it progresses past connecting
+    useEffect(() => {
+        if (callStatus === 'ringing' || callStatus === 'connected') {
+            callWasActiveRef.current = true;
+        }
+    }, [callStatus]);
+
+    // Fetch next unassigned lead when call ends or fails (only after call was active)
+    useEffect(() => {
+        if (!callWasActiveRef.current) {
+            return; // Don't fetch on initial mount
+        }
+        if (callStatus !== 'ended' && callStatus !== 'failed') {
+            return;
+        }
+
+        const fetchNextUnassigned = async () => {
+            setLoadingUnassigned(true);
+            try {
+                const response = await api.getNextUnassignedLead(leadId);
+                console.log('Next unassigned lead response:', response);
+                setNextUnassignedLead(response.nextLead);
+            } catch (error) {
+                console.error('Error fetching next unassigned lead:', error);
+                setNextUnassignedLead(null);
+            } finally {
+                setLoadingUnassigned(false);
+            }
+        };
+        fetchNextUnassigned();
+    }, [callStatus, leadId]);
 
     // Load SIP configuration from localStorage or use defaults
     const getSipConfig = () => {
@@ -416,6 +453,54 @@ const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext
         onCallNext(nextLead);
     };
 
+    const handleNextUnassignedCall = async () => {
+        if (!nextUnassignedLead || !onCallNext) return;
+
+        // Save notes and status before moving to next call
+        if ((notes.trim() || callDuration > 0 || selectedStatus) && leadId) {
+            await saveCallNotes();
+        }
+
+        // Release the current dial lock
+        if (leadId) {
+            try {
+                await api.releaseLeadLock(leadId);
+            } catch (error) {
+                console.log('Error releasing lock:', error.message);
+            }
+        }
+
+        // Stop current session
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+
+        if (sessionRef.current) {
+            try {
+                const session = sessionRef.current;
+                if (session.isInProgress() || session.isEstablished()) {
+                    session.terminate();
+                }
+            } catch (error) {
+                console.log('Session already terminated:', error.message);
+            }
+            sessionRef.current = null;
+        }
+
+        if (uaRef.current) {
+            try {
+                uaRef.current.stop();
+            } catch (error) {
+                console.log('UA stop error:', error.message);
+            }
+            uaRef.current = null;
+        }
+
+        // Call the next unassigned lead (lock is already acquired by the API)
+        onCallNext(nextUnassignedLead);
+    };
+
     const getStatusIcon = () => {
         switch (callStatus) {
             case 'connecting':
@@ -458,7 +543,10 @@ const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext
                     <div className="call-info">
                         <h3>Calling</h3>
                         <div className="call-number">{phoneNumber}</div>
-                        {lead?.company && (
+                        {lead?.name && (
+                            <div className="call-lead-name">{lead.name}</div>
+                        )}
+                        {lead?.company && lead.company !== lead.name && (
                             <div className="call-company">{lead.company}</div>
                         )}
                         {campaignName && (
@@ -540,6 +628,30 @@ const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext
                 )}
 
                 <div className="call-actions">
+                    {nextLead && onCallNext && (
+                        <button
+                            className="btn-next-call"
+                            onClick={handleNextCall}
+                            disabled={isSaving || loadingNext}
+                        >
+                            {loadingNext ? 'Loading...' : `Next Assigned Call: ${nextLead.company || nextLead.name || nextLead.phone}`}
+                        </button>
+                    )}
+                    {(callStatus === 'ended' || callStatus === 'failed') && onCallNext && (
+                        loadingUnassigned ? (
+                            <button className="btn-next-unassigned" disabled>
+                                Finding next lead...
+                            </button>
+                        ) : nextUnassignedLead ? (
+                            <button
+                                className="btn-next-unassigned"
+                                onClick={handleNextUnassignedCall}
+                                disabled={isSaving}
+                            >
+                                Next Unassigned: {nextUnassignedLead.company || nextUnassignedLead.name || nextUnassignedLead.phone}
+                            </button>
+                        ) : null
+                    )}
                     <button
                         className="btn-hangup"
                         onClick={handleHangup}
@@ -547,15 +659,6 @@ const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext
                     >
                         {isSaving ? 'Saving...' : (callStatus === 'ended' || callStatus === 'failed' ? 'Close' : 'Hang Up')}
                     </button>
-                    {nextLead && onCallNext && (
-                        <button
-                            className="btn-next-call"
-                            onClick={handleNextCall}
-                            disabled={isSaving || loadingNext}
-                        >
-                            {loadingNext ? 'Loading...' : `Next Call: ${nextLead.company || nextLead.name || nextLead.phone}`}
-                        </button>
-                    )}
                 </div>
 
                 <audio ref={remoteAudioRef} autoPlay />

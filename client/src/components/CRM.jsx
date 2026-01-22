@@ -11,6 +11,7 @@ import IndividualDashboard from './dashboard/IndividualDashboard';
 import AdminDashboard from './dashboard/AdminDashboard';
 import Campaigns from './campaigns/Campaigns';
 import MyLeads from './myleads/MyLeads';
+import CallHistory from './callhistory/CallHistory';
 import UserManagement from './users/UserManagement';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
@@ -202,9 +203,16 @@ function CRM() {
         setShowForm(true);
     };
 
-    const handleEditLead = (lead) => {
-        setEditingLead(lead);
-        setShowForm(true);
+    const handleEditLead = async (lead) => {
+        try {
+            // Fetch fresh data from database
+            const response = await api.getLead(lead.id);
+            setEditingLead(response.lead);
+            setShowForm(true);
+        } catch (err) {
+            console.error('Error fetching lead:', err);
+            alert('Failed to load lead data. Please try again.');
+        }
     };
 
     const handleSaveLead = async (leadData) => {
@@ -450,6 +458,22 @@ function CRM() {
                             <MyLeads
                                 onEditLead={handleEditLead}
                                 onDeleteLead={handleDeleteLead}
+                                onCall={handleCall}
+                            />
+                        </div>
+                    </>
+                ) : activeView === 'call-history' ? (
+                    <>
+                        <Topbar
+                            title="Call History"
+                            onOpenSettings={() => setShowSipSettings(true)}
+                            onToggleMobileMenu={toggleMobileMenu}
+                            searchTerm=""
+                            onSearchChange={() => {}}
+                        />
+                        <div className="content-area">
+                            <CallHistory
+                                onEditLead={handleEditLead}
                                 onCall={handleCall}
                             />
                         </div>

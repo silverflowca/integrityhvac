@@ -334,6 +334,17 @@ class ApiService {
         if (currentLeadId) params.append('currentLeadId', currentLeadId);
         return this.request(`/campaigns/${campaignId}/next-lead?${params.toString()}`);
     }
+
+    async getNextUnassignedLead(currentLeadId) {
+        return this.request('/leads/next-unassigned', {
+            method: 'POST',
+            body: JSON.stringify({ currentLeadId }),
+        });
+    }
+
+    async getCallHistory(page = 1, limit = 50) {
+        return this.request(`/leads/call-history?page=${page}&limit=${limit}`);
+    }
 }
 
 export default new ApiService();

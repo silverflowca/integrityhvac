@@ -80,6 +80,14 @@ const Sidebar = ({ activeView, onViewChange, leadCount, mobileOpen, onClose, isC
                         {!isCollapsed && <span className="nav-text">My Leads</span>}
                     </div>
                     <div
+                        className={'nav-item nav-sub-item ' + (activeView === 'call-history' ? 'active' : '')}
+                        onClick={() => handleNavClick('call-history')}
+                        title={isCollapsed ? 'Call History' : ''}
+                    >
+                        <span className="nav-icon">📜</span>
+                        {!isCollapsed && <span className="nav-text">Call History</span>}
+                    </div>
+                    <div
                         className={'nav-item ' + (activeView === 'dashboard' ? 'active' : '')}
                         onClick={() => handleNavClick('dashboard')}
                         title={isCollapsed ? 'My Dashboard' : ''}

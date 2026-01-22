@@ -242,13 +242,14 @@ router.get('/:id/next-lead', async (req, res) => {
 
         // Get all leads in this campaign assigned to the current user that are not called yet
         // A lead is "uncalled" if it has no 'called' audit trail entry by this user
+        // Sort by created_at descending to match the "newest first" default in My Leads
         const { data: campaignLeads, error: leadsError } = await supabase
             .from('leads')
             .select('id, name, phone, company, status, priority, campaign_id')
             .eq('campaign_id', id)
             .eq('assigned_to', userId)
             .not('status', 'in', '("won","lost","deleted")')
-            .order('created_at', { ascending: true });
+            .order('created_at', { ascending: false });
 
         if (leadsError) throw leadsError;
 

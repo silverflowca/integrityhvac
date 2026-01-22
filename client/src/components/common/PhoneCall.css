@@ -56,7 +56,14 @@
 .call-number {
     font-size: 28px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.call-lead-name {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-bottom: 4px;
 }
 
 .call-company {
@@ -320,6 +327,40 @@
     box-shadow: none;
 }
 
+.btn-next-unassigned {
+    background: #3b82f6;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-next-unassigned:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.btn-next-unassigned:active {
+    transform: translateY(0);
+}
+
+.btn-next-unassigned:disabled {
+    background: rgba(255, 255, 255, 0.3);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Mobile responsive styles */
 @media (max-width: 768px) {
     .phone-call-modal {
@@ -410,6 +451,12 @@
         font-size: 13px;
     }
 
+    .btn-next-unassigned {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 13px;
+    }
+
     .call-company {
         font-size: 14px;
     }
@@ -460,6 +507,11 @@
     }
 
     .btn-next-call {
+        padding: 10px 16px;
+        font-size: 12px;
+    }
+
+    .btn-next-unassigned {
         padding: 10px 16px;
         font-size: 12px;
     }

@@ -74,6 +74,244 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Get call history for current user
+ * Returns leads that the user has called, ordered by most recent call
+ * IMPORTANT: This route must be defined BEFORE /:id routes
+ */
+router.get('/call-history', async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const offset = (page - 1) * limit;
+
+        // Get all 'called' audit trail entries for this user, ordered by timestamp desc
+        const { data: callRecords, error: callError } = await supabase
+            .from('audit_trails')
+            .select('lead_id, timestamp, changes')
+            .eq('user_id', userId)
+            .eq('action', 'called')
+            .order('timestamp', { ascending: false });
+
+        if (callError) throw callError;
+
+        if (!callRecords || callRecords.length === 0) {
+            return res.json({
+                success: true,
+                calls: [],
+                total: 0,
+                page,
+                totalPages: 0
+            });
+        }
+
+        // Get unique lead IDs while preserving order (most recent call first)
+        const seenLeadIds = new Set();
+        const uniqueCallRecords = [];
+        for (const record of callRecords) {
+            if (!seenLeadIds.has(record.lead_id)) {
+                seenLeadIds.add(record.lead_id);
+                uniqueCallRecords.push(record);
+            }
+        }
+
+        const total = uniqueCallRecords.length;
+        const totalPages = Math.ceil(total / limit);
+
+        // Apply pagination
+        const paginatedRecords = uniqueCallRecords.slice(offset, offset + limit);
+        const leadIds = paginatedRecords.map(r => r.lead_id);
+
+        // Fetch lead details for these leads
+        const { data: leads, error: leadsError } = await supabase
+            .from('leads')
+            .select(`
+                id, company, name, phone, email, location, status, priority,
+                campaign_id, assigned_to, notes, created_at, updated_at,
+                campaign:campaigns(id, name)
+            `)
+            .in('id', leadIds);
+
+        if (leadsError) throw leadsError;
+
+        // Create a map for quick lookup
+        const leadMap = {};
+        leads?.forEach(lead => {
+            leadMap[lead.id] = lead;
+        });
+
+        // Build response with call time info, maintaining order from callRecords
+        const calls = paginatedRecords.map(record => {
+            const lead = leadMap[record.lead_id];
+            if (!lead) return null;
+
+            return {
+                id: lead.id,
+                company: lead.company,
+                name: lead.name,
+                phone: lead.phone,
+                email: lead.email,
+                location: lead.location,
+                status: lead.status,
+                priority: lead.priority,
+                campaignId: lead.campaign_id,
+                campaignName: lead.campaign?.name || null,
+                assignedTo: lead.assigned_to,
+                notes: lead.notes,
+                createdAt: lead.created_at,
+                updatedAt: lead.updated_at,
+                lastCallTime: record.timestamp,
+                callDuration: record.changes?.duration || 0,
+                callNotes: record.changes?.notes || ''
+            };
+        }).filter(Boolean);
+
+        res.json({
+            success: true,
+            calls,
+            total,
+            page,
+            totalPages
+        });
+    } catch (error) {
+        console.error('Error getting call history:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * Get next unassigned lead and acquire lock atomically
+ * Returns the next available lead that is not assigned to any user and not locked
+ * IMPORTANT: This route must be defined BEFORE /:id routes to avoid matching issues
+ */
+router.post('/next-unassigned', async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userName = req.user.name || req.user.email;
+        const { currentLeadId } = req.body;
+
+        console.log('[Next Unassigned] Request received, userId:', userId, 'currentLeadId:', currentLeadId);
+
+        // Clean up expired locks first
+        await supabase
+            .from('lead_locks')
+            .delete()
+            .lt('expires_at', new Date().toISOString());
+
+        // Get all currently locked lead IDs
+        const { data: activeLocks, error: locksError } = await supabase
+            .from('lead_locks')
+            .select('lead_id')
+            .gt('expires_at', new Date().toISOString());
+
+        if (locksError) throw locksError;
+
+        const lockedLeadIds = activeLocks?.map(l => l.lead_id) || [];
+        console.log('[Next Unassigned] Active locks:', lockedLeadIds.length);
+
+        // Build query for unassigned leads that are not locked and not in terminal states
+        let query = supabase
+            .from('leads')
+            .select('id, name, phone, company, status, priority, campaign_id')
+            .is('assigned_to', null)
+            .not('status', 'in', '("won","lost","deleted")')
+            .order('created_at', { ascending: true })
+            .limit(10); // Get a few candidates in case some get locked
+
+        // Exclude currently locked leads
+        if (lockedLeadIds.length > 0) {
+            query = query.not('id', 'in', `(${lockedLeadIds.join(',')})`);
+        }
+
+        // Exclude current lead if provided
+        if (currentLeadId) {
+            query = query.neq('id', currentLeadId);
+        }
+
+        const { data: availableLeads, error: leadsError } = await query;
+
+        if (leadsError) throw leadsError;
+
+        console.log('[Next Unassigned] Available leads found:', availableLeads?.length || 0);
+
+        if (!availableLeads || availableLeads.length === 0) {
+            return res.json({
+                success: true,
+                nextLead: null,
+                message: 'No unassigned leads available'
+            });
+        }
+
+        // Try to acquire lock on the first available lead
+        for (const lead of availableLeads) {
+            // Check if this lead got locked in the meantime
+            const { data: existingLock, error: checkError } = await supabase
+                .from('lead_locks')
+                .select('*')
+                .eq('lead_id', lead.id)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                continue; // Skip this lead if there's an error
+            }
+
+            if (existingLock) {
+                continue; // Lead is locked, try next one
+            }
+
+            // Try to create lock
+            const { data: newLock, error: insertError } = await supabase
+                .from('lead_locks')
+                .insert({
+                    lead_id: lead.id,
+                    user_id: userId,
+                    user_name: userName,
+                    locked_at: new Date().toISOString(),
+                    expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+                })
+                .select()
+                .single();
+
+            if (insertError) {
+                // Race condition - another user locked it, try next lead
+                if (insertError.code === '23505') {
+                    continue;
+                }
+                throw insertError;
+            }
+
+            // Successfully locked this lead
+            console.log('[Next Unassigned] Returning lead:', lead.id, lead.company || lead.name);
+            return res.json({
+                success: true,
+                nextLead: {
+                    id: lead.id,
+                    name: lead.name,
+                    phone: lead.phone,
+                    company: lead.company,
+                    status: lead.status,
+                    priority: lead.priority,
+                    campaignId: lead.campaign_id
+                },
+                lock: newLock,
+                message: 'Lead locked successfully'
+            });
+        }
+
+        // All candidates got locked by other users
+        return res.json({
+            success: true,
+            nextLead: null,
+            message: 'All available leads are currently being dialed by others'
+        });
+
+    } catch (error) {
+        console.error('Error getting next unassigned lead:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * Get lead by ID
  */
 router.get('/:id', async (req, res) => {
