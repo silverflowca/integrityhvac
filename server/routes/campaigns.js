@@ -233,6 +233,86 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /api/campaigns/:id/next-lead - Get next uncalled lead in campaign assigned to current user
+router.get('/:id/next-lead', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { currentLeadId } = req.query;
+        const userId = req.user.id;
+
+        // Get all leads in this campaign assigned to the current user that are not called yet
+        // A lead is "uncalled" if it has no 'called' audit trail entry by this user
+        const { data: campaignLeads, error: leadsError } = await supabase
+            .from('leads')
+            .select('id, name, phone, company, status, priority, campaign_id')
+            .eq('campaign_id', id)
+            .eq('assigned_to', userId)
+            .not('status', 'in', '("won","lost","deleted")')
+            .order('created_at', { ascending: true });
+
+        if (leadsError) throw leadsError;
+
+        if (!campaignLeads || campaignLeads.length === 0) {
+            return res.json({ nextLead: null, hasMore: false });
+        }
+
+        // Get leads that have been called by this user
+        const leadIds = campaignLeads.map(l => l.id);
+        const { data: calledLeads, error: auditError } = await supabase
+            .from('audit_trails')
+            .select('lead_id')
+            .eq('action', 'called')
+            .eq('user_id', userId)
+            .in('lead_id', leadIds);
+
+        if (auditError) throw auditError;
+
+        // Filter out called leads
+        const calledLeadIds = new Set(calledLeads?.map(c => c.lead_id) || []);
+        const uncalledLeads = campaignLeads.filter(l => !calledLeadIds.has(l.id));
+
+        // Also exclude the current lead if provided
+        let availableLeads = uncalledLeads;
+        if (currentLeadId) {
+            availableLeads = uncalledLeads.filter(l => l.id !== currentLeadId);
+        }
+
+        if (availableLeads.length === 0) {
+            return res.json({ nextLead: null, hasMore: false });
+        }
+
+        // Get the campaign name
+        const { data: campaign, error: campaignError } = await supabase
+            .from('campaigns')
+            .select('name')
+            .eq('id', id)
+            .single();
+
+        if (campaignError) throw campaignError;
+
+        // Return the first uncalled lead
+        const nextLead = {
+            id: availableLeads[0].id,
+            name: availableLeads[0].name,
+            phone: availableLeads[0].phone,
+            company: availableLeads[0].company,
+            status: availableLeads[0].status,
+            priority: availableLeads[0].priority,
+            campaignId: id,
+            campaignName: campaign?.name || 'Unknown Campaign'
+        };
+
+        res.json({
+            nextLead,
+            hasMore: availableLeads.length > 1,
+            remainingCount: availableLeads.length - 1
+        });
+    } catch (error) {
+        console.error('Error fetching next campaign lead:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // GET /api/campaigns/:id - Get single campaign
 router.get('/:id', async (req, res) => {
     try {

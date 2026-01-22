@@ -328,6 +328,12 @@ class ApiService {
     async getCampaignLocks(campaignId) {
         return this.request(`/leads/campaign/${campaignId}/locks`);
     }
+
+    async getNextCampaignLead(campaignId, currentLeadId) {
+        const params = new URLSearchParams();
+        if (currentLeadId) params.append('currentLeadId', currentLeadId);
+        return this.request(`/campaigns/${campaignId}/next-lead?${params.toString()}`);
+    }
 }
 
 export default new ApiService();

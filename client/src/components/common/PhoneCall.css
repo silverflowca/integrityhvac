@@ -56,7 +56,30 @@
 .call-number {
     font-size: 28px;
     font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.call-company {
+    font-size: 16px;
+    font-weight: 500;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.call-campaign {
     margin-bottom: 12px;
+}
+
+.campaign-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .call-status {
@@ -74,6 +97,29 @@
     background: rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     display: inline-block;
+}
+
+.native-dialer-link {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 25px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.native-dialer-link:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
+}
+
+.native-dialer-link:active {
+    transform: scale(0.98);
 }
 
 /* Lead Status Section */
@@ -212,7 +258,9 @@
 
 .call-actions {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
 }
 
 .btn-hangup {
@@ -236,6 +284,40 @@
 
 .btn-hangup:active {
     transform: translateY(0);
+}
+
+.btn-next-call {
+    background: #10b981;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-next-call:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+}
+
+.btn-next-call:active {
+    transform: translateY(0);
+}
+
+.btn-next-call:disabled {
+    background: rgba(255, 255, 255, 0.3);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Mobile responsive styles */
@@ -321,6 +403,21 @@
         font-size: 15px;
         width: 100%;
     }
+
+    .btn-next-call {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 13px;
+    }
+
+    .call-company {
+        font-size: 14px;
+    }
+
+    .campaign-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
 }
 
 /* Extra small phones */
@@ -360,5 +457,10 @@
     .btn-hangup {
         padding: 12px 32px;
         font-size: 14px;
+    }
+
+    .btn-next-call {
+        padding: 10px 16px;
+        font-size: 12px;
     }
 }

@@ -271,7 +271,9 @@ function CRM() {
     };
 
     const handleCall = (phoneNumber, leadId) => {
-        setActiveCall({ phoneNumber, leadId });
+        // Find the lead data to pass campaign info to PhoneCall
+        const lead = leads.find(l => l.id === leadId);
+        setActiveCall({ phoneNumber, leadId, lead });
     };
 
     const handleCloseCall = () => {
@@ -518,7 +520,16 @@ function CRM() {
                 <PhoneCall
                     phoneNumber={activeCall.phoneNumber}
                     leadId={activeCall.leadId}
+                    lead={activeCall.lead}
                     onClose={handleCloseCall}
+                    onCallNext={(nextLead) => {
+                        // Close current call and start new one with next lead
+                        setActiveCall({
+                            phoneNumber: nextLead.phone,
+                            leadId: nextLead.id,
+                            lead: nextLead
+                        });
+                    }}
                 />
             )}
 

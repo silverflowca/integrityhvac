@@ -3,13 +3,16 @@ import JsSIP from 'jssip';
 import api from '../../services/api';
 import './PhoneCall.css';
 
-const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
+const PhoneCall = ({ phoneNumber, leadId, lead, onClose, onNoteSaved, onCallNext }) => {
     const [callStatus, setCallStatus] = useState('connecting');
     const [callDuration, setCallDuration] = useState(0);
     const [notes, setNotes] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [statuses, setStatuses] = useState([]);
     const [selectedStatus, setSelectedStatus] = useState('');
+    const [nextLead, setNextLead] = useState(null);
+    const [campaignName, setCampaignName] = useState('');
+    const [loadingNext, setLoadingNext] = useState(false);
     const sessionRef = useRef(null);
     const uaRef = useRef(null);
     const timerRef = useRef(null);
@@ -28,6 +31,35 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
         };
         fetchStatuses();
     }, []);
+
+    // Fetch next lead in campaign if lead has a campaign
+    useEffect(() => {
+        const fetchNextLead = async () => {
+            if (!lead?.campaignId) {
+                setNextLead(null);
+                setCampaignName('');
+                return;
+            }
+
+            setLoadingNext(true);
+            try {
+                const response = await api.getNextCampaignLead(lead.campaignId, leadId);
+                setNextLead(response.nextLead);
+                if (response.nextLead) {
+                    setCampaignName(response.nextLead.campaignName || '');
+                } else {
+                    // If no next lead, still try to get campaign name from current lead
+                    setCampaignName(lead.campaignName || '');
+                }
+            } catch (error) {
+                console.error('Error fetching next lead:', error);
+                setNextLead(null);
+            } finally {
+                setLoadingNext(false);
+            }
+        };
+        fetchNextLead();
+    }, [lead?.campaignId, leadId]);
 
     // Load SIP configuration from localStorage or use defaults
     const getSipConfig = () => {
@@ -336,6 +368,54 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
         }
     };
 
+    const handleNextCall = async () => {
+        if (!nextLead || !onCallNext) return;
+
+        // Save notes and status before moving to next call
+        if ((notes.trim() || callDuration > 0 || selectedStatus) && leadId) {
+            await saveCallNotes();
+        }
+
+        // Release the current dial lock
+        if (leadId) {
+            try {
+                await api.releaseLeadLock(leadId);
+            } catch (error) {
+                console.log('Error releasing lock:', error.message);
+            }
+        }
+
+        // Stop current session
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+        }
+
+        if (sessionRef.current) {
+            try {
+                const session = sessionRef.current;
+                if (session.isInProgress() || session.isEstablished()) {
+                    session.terminate();
+                }
+            } catch (error) {
+                console.log('Session already terminated:', error.message);
+            }
+            sessionRef.current = null;
+        }
+
+        if (uaRef.current) {
+            try {
+                uaRef.current.stop();
+            } catch (error) {
+                console.log('UA stop error:', error.message);
+            }
+            uaRef.current = null;
+        }
+
+        // Call the next lead
+        onCallNext(nextLead);
+    };
+
     const getStatusIcon = () => {
         switch (callStatus) {
             case 'connecting':
@@ -378,9 +458,25 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
                     <div className="call-info">
                         <h3>Calling</h3>
                         <div className="call-number">{phoneNumber}</div>
+                        {lead?.company && (
+                            <div className="call-company">{lead.company}</div>
+                        )}
+                        {campaignName && (
+                            <div className="call-campaign">
+                                <span className="campaign-badge">{campaignName}</span>
+                            </div>
+                        )}
                         <div className="call-status">{getStatusText()}</div>
                         {callStatus === 'connected' && (
                             <div className="call-duration">{formatDuration(callDuration)}</div>
+                        )}
+                        {callStatus === 'failed' && (
+                            <a
+                                href={`tel:${phoneNumber.replace(/\D/g, '')}`}
+                                className="native-dialer-link"
+                            >
+                                📱 Use Native Dialer
+                            </a>
                         )}
                     </div>
                 </div>
@@ -451,6 +547,15 @@ const PhoneCall = ({ phoneNumber, leadId, onClose, onNoteSaved }) => {
                     >
                         {isSaving ? 'Saving...' : (callStatus === 'ended' || callStatus === 'failed' ? 'Close' : 'Hang Up')}
                     </button>
+                    {nextLead && onCallNext && (
+                        <button
+                            className="btn-next-call"
+                            onClick={handleNextCall}
+                            disabled={isSaving || loadingNext}
+                        >
+                            {loadingNext ? 'Loading...' : `Next Call: ${nextLead.company || nextLead.name || nextLead.phone}`}
+                        </button>
+                    )}
                 </div>
 
                 <audio ref={remoteAudioRef} autoPlay />
